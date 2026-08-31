@@ -10,38 +10,9 @@ import {
   saveConductTheme,
 } from '../utils/conductTheme'
 
+import { measureAnchorPanel } from '../utils/measureAnchorPanel'
+
 const PANEL_WIDTH = 256
-const VIEWPORT_PADDING = 12
-
-function measurePanel(anchor) {
-  const rect = anchor.getBoundingClientRect()
-  const gap = 8
-  const minHeight = 160
-
-  let left = rect.right - PANEL_WIDTH
-  left = Math.max(
-    VIEWPORT_PADDING,
-    Math.min(left, window.innerWidth - PANEL_WIDTH - VIEWPORT_PADDING),
-  )
-
-  const spaceBelow = window.innerHeight - rect.bottom - gap - VIEWPORT_PADDING
-  const openUp = spaceBelow < minHeight && rect.top > spaceBelow + 40
-
-  if (!openUp) {
-    return {
-      left,
-      top: rect.bottom + gap,
-      maxHeight: Math.max(minHeight, spaceBelow),
-    }
-  }
-
-  const spaceAbove = rect.top - gap - VIEWPORT_PADDING
-  return {
-    left,
-    bottom: window.innerHeight - rect.top + gap,
-    maxHeight: Math.max(minHeight, spaceAbove),
-  }
-}
 
 export default function ConductThemePicker({ theme, fontScale, onThemeChange, onFontScaleChange }) {
   const [open, setOpen] = useState(false)
@@ -57,7 +28,7 @@ export default function ConductThemePicker({ theme, fontScale, onThemeChange, on
     }
 
     const updateLayout = () => {
-      if (buttonRef.current) setPanelLayout(measurePanel(buttonRef.current))
+      if (buttonRef.current) setPanelLayout(measureAnchorPanel(buttonRef.current, PANEL_WIDTH))
     }
 
     updateLayout()

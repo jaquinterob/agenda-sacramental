@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ShareNetwork, LinkSimple } from '@phosphor-icons/react'
+import { ShareNetwork } from '@phosphor-icons/react'
 import { buildConductSchedule, formatDateLong, formatTime12h, MEETING_TOTAL_MINUTES } from '../utils/buildConductSchedule'
 import { conductPdfFilename, downloadConductPdf, shareConductPdf, sharePdfFile } from '../utils/exportConductPdf'
 import { copyShareLink, SHARE_MODES } from '../utils/agendaShareLink'
@@ -19,6 +19,7 @@ import ConductProgressRail, { getItemProgress } from './ConductProgressRail'
 import { scheduleItemIconType, TypeLabel } from './ItemTypeIcon'
 import ChurchLogo from './ChurchLogo'
 import ConductThemePicker, { useConductThemeState } from './ConductThemePicker'
+import ConductLinkMenu from './ConductLinkMenu'
 import { applyConductFontScale, clearConductFontScale } from '../utils/conductTheme'
 import { getPresidesMetaFields } from '../utils/presidesTitle'
 import { capitalizeName } from '../utils/capitalizeName'
@@ -377,29 +378,12 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
   const [capturing, setCapturing] = useState(false)
   const [shareError, setShareError] = useState('')
   const [linkCopied, setLinkCopied] = useState(null)
-  const [linkMenuOpen, setLinkMenuOpen] = useState(false)
   const [pdfShare, setPdfShare] = useState(null)
   const { theme, setTheme, fontScale, setFontScale } = useConductThemeState()
   const itemRefs = useRef(new Map())
   const exportRef = useRef(null)
   const sharingRef = useRef(false)
-  const linkMenuRef = useRef(null)
   const shareButtonRef = useRef(null)
-
-  useEffect(() => {
-    if (!linkMenuOpen) return
-    const handlePointer = (event) => {
-      if (linkMenuRef.current && !linkMenuRef.current.contains(event.target)) {
-        setLinkMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handlePointer)
-    document.addEventListener('touchstart', handlePointer)
-    return () => {
-      document.removeEventListener('mousedown', handlePointer)
-      document.removeEventListener('touchstart', handlePointer)
-    }
-  }, [linkMenuOpen])
 
   const setItemRef = useCallback((key) => (el) => {
     if (el) itemRefs.current.set(key, el)
@@ -507,7 +491,6 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
     try {
       await copyShareLink(liveAgenda, mode)
       setLinkCopied(mode)
-      setLinkMenuOpen(false)
       window.setTimeout(() => setLinkCopied(null), 2500)
     } catch {
       setShareError('No se pudo copiar el enlace')
@@ -587,62 +570,11 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
               onThemeChange={setTheme}
               onFontScaleChange={setFontScale}
             />
-            <div className="relative" ref={linkMenuRef}>
-              <button
-                type="button"
-                onClick={() => setLinkMenuOpen((open) => !open)}
-                className="text-sm text-white/80 hover:text-white flex items-center gap-1.5"
-                title="Copiar enlace para compartir"
-                aria-expanded={linkMenuOpen}
-                aria-haspopup="dialog"
-              >
-                <LinkSimple className="w-4 h-4" weight="bold" aria-hidden="true" />
-                <span className="hidden sm:inline">
-                  {linkCopied === SHARE_MODES.VIEW
-                    ? 'Lectura copiado'
-                    : linkCopied === SHARE_MODES.EDIT
-                      ? 'Edición copiado'
-                      : 'Enlace'}
-                </span>
-                <span className="sm:hidden">{linkCopied ? 'Listo' : 'Enlace'}</span>
-              </button>
-              {linkMenuOpen && (
-                <div
-                  role="dialog"
-                  aria-label="Tipo de enlace"
-                  className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-white/10 bg-brand-900 p-4 shadow-xl"
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 mb-2">
-                    Compartir enlace
-                  </p>
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(SHARE_MODES.VIEW)}
-                      className="w-full rounded-lg bg-white/10 px-3 py-2.5 text-left hover:bg-white/15 transition-colors"
-                    >
-                      <span className="block text-sm font-semibold text-white">Solo lectura</span>
-                      <span className="block text-xs text-white/60 mt-0.5 leading-snug">
-                        Abre la presentación para dirigir, sin editar la agenda.
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={readOnly}
-                      onClick={() => handleCopyLink(SHARE_MODES.EDIT)}
-                      className="w-full rounded-lg px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40 bg-white/10 enabled:hover:bg-white/15"
-                    >
-                      <span className="block text-sm font-semibold text-white">Para editar</span>
-                      <span className="block text-xs text-white/60 mt-0.5 leading-snug">
-                        {readOnly
-                          ? 'No disponible en enlaces de solo lectura.'
-                          : 'Abre el formulario completo para cambiar nombres, himnos y orden.'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ConductLinkMenu
+              readOnly={readOnly}
+              linkCopied={linkCopied}
+              onCopyLink={handleCopyLink}
+            />
             <button
               ref={shareButtonRef}
               type="button"
