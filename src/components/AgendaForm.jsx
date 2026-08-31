@@ -457,6 +457,13 @@ export default function AgendaForm({
       case 'closing':
         return (
           <div className="space-y-6">
+            <HymnSelector
+              label="Himno de cierre"
+              hymns={hymns}
+              value={form.closingHymn}
+              onChange={(n) => update('closingHymn', n)}
+              required
+            />
             <div>
               <FormLabel type="prayer" htmlFor="closingPrayer" required>
                 Última oración
@@ -468,13 +475,6 @@ export default function AgendaForm({
                 className={inputClass}
               />
             </div>
-            <HymnSelector
-              label="Himno de cierre"
-              hymns={hymns}
-              value={form.closingHymn}
-              onChange={(n) => update('closingHymn', n)}
-              required
-            />
           </div>
         )
 
