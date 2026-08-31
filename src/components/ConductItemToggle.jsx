@@ -67,7 +67,7 @@ export default function ConductItemToggle({ done, onToggle, label, className = '
     <button
       type="button"
       onClick={onToggle}
-      className={`shrink-0 rounded-full p-0.5 transition-colors hover:bg-brand-700/5 ${className}`}
+      className={`shrink-0 rounded-full p-0.5 mr-1.5 md:mr-2 transition-colors hover:bg-brand-700/5 ${className}`}
       aria-label={done ? `Marcar «${label}» como pendiente` : `Marcar «${label}» como hecho`}
       aria-pressed={done}
     >
