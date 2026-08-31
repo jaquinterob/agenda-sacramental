@@ -32,6 +32,56 @@ import {
 import WardScriptText from './WardScriptText'
 import { WelcomeVisitorsList } from './VisitorsEditor'
 
+function ConductProgressRing({ done, total, complete, nextLabel }) {
+  const size = 28
+  const stroke = 3
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const progress = total > 0 ? done / total : 0
+  const offset = circumference * (1 - progress)
+  const title = complete
+    ? 'Reunión completada'
+    : nextLabel
+      ? `Siguiente: ${nextLabel} · ${done} de ${total}`
+      : `${done} de ${total}`
+
+  return (
+    <span
+      className="relative inline-flex items-center justify-center shrink-0"
+      title={title}
+      aria-label={title}
+      role="status"
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={stroke}
+          className="text-white/20"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="text-white/90 transition-[stroke-dashoffset] duration-300"
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold tabular-nums leading-none text-white/90">
+        {done}/{total}
+      </span>
+    </span>
+  )
+}
+
 function TimelineRow({ time, children, done, current, onToggleDone, doneLabel, itemRef, progress, exportMode, pdfBlock = true }) {
   return (
     <div
@@ -548,61 +598,51 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
       data-conduct-font={fontScale}
     >
       <header className="conduct-header sticky top-0 z-20 bg-brand-900 text-white shadow-md">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex justify-between gap-3">
-          <div className="flex items-center shrink-0">
-            {readOnly ? (
-              <span className="text-xs font-medium text-white/70">Solo lectura</span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onBack(liveAgenda)}
-                className="text-sm text-white/80 hover:text-white flex items-center gap-1.5"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Editar
-              </button>
-            )}
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col items-end gap-1 lg:flex-row lg:items-center lg:justify-end lg:gap-3">
-            <div className="flex items-center gap-3 shrink-0">
-              <ConductThemePicker
-                theme={theme}
-                fontScale={fontScale}
-                onThemeChange={setTheme}
-                onFontScaleChange={setFontScale}
-              />
-              <ConductLinkMenu
-                readOnly={readOnly}
-                linkCopied={linkCopied}
-                onCopyLink={handleCopyLink}
-              />
-              <button
-                ref={shareButtonRef}
-                type="button"
-                onClick={handleShare}
-                disabled={capturing}
-                className="text-sm text-white/80 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
-                title="Compartir PDF de la agenda"
-              >
-                <ShareNetwork className="w-4 h-4" weight="bold" aria-hidden="true" />
-                {capturing ? 'Generando…' : 'PDF'}
-              </button>
-            </div>
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          {readOnly ? (
+            <span className="text-xs font-medium text-white/70 shrink-0">Solo lectura</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onBack(liveAgenda)}
+              className="text-sm text-white/80 hover:text-white flex items-center gap-1.5 shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Editar
+            </button>
+          )}
+          <div className="flex items-center gap-3 shrink-0">
+            <ConductThemePicker
+              theme={theme}
+              fontScale={fontScale}
+              onThemeChange={setTheme}
+              onFontScaleChange={setFontScale}
+            />
+            <ConductLinkMenu
+              readOnly={readOnly}
+              linkCopied={linkCopied}
+              onCopyLink={handleCopyLink}
+            />
+            <button
+              ref={shareButtonRef}
+              type="button"
+              onClick={handleShare}
+              disabled={capturing}
+              className="text-sm text-white/80 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
+              title="Compartir PDF de la agenda"
+            >
+              <ShareNetwork className="w-4 h-4" weight="bold" aria-hidden="true" />
+              {capturing ? 'Generando…' : 'PDF'}
+            </button>
             {!capturing && itemKeys.length > 0 && (
-              <div className="flex min-w-0 max-w-full items-center justify-end gap-2">
-                {meetingComplete ? (
-                  <span className="truncate text-xs font-medium text-white/90">Reunión completada</span>
-                ) : nextItemLabel ? (
-                  <span className="truncate text-xs font-medium text-white/90">
-                    Siguiente: {nextItemLabel}
-                  </span>
-                ) : null}
-                <span className="shrink-0 text-xs font-medium tabular-nums text-white/50">
-                  {doneCount}/{itemKeys.length}
-                </span>
-              </div>
+              <ConductProgressRing
+                done={doneCount}
+                total={itemKeys.length}
+                complete={meetingComplete}
+                nextLabel={nextItemLabel}
+              />
             )}
           </div>
         </div>
