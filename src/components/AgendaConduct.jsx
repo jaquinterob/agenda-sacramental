@@ -548,15 +548,15 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
       data-conduct-font={fontScale}
     >
       <header className="conduct-header sticky top-0 z-20 bg-brand-900 text-white shadow-md">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-3">
-          <div className="flex items-center justify-between gap-3">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex justify-between gap-3">
+          <div className="flex items-center shrink-0">
             {readOnly ? (
-              <span className="text-xs font-medium text-white/70 shrink-0">Solo lectura</span>
+              <span className="text-xs font-medium text-white/70">Solo lectura</span>
             ) : (
               <button
                 type="button"
                 onClick={() => onBack(liveAgenda)}
-                className="text-sm text-white/80 hover:text-white flex items-center gap-1.5 shrink-0"
+                className="text-sm text-white/80 hover:text-white flex items-center gap-1.5"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -564,6 +564,8 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
                 Editar
               </button>
             )}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col items-end gap-1 lg:flex-row lg:items-center lg:justify-end lg:gap-3">
             <div className="flex items-center gap-3 shrink-0">
               <ConductThemePicker
                 theme={theme}
@@ -588,21 +590,21 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
                 {capturing ? 'Generando…' : 'PDF'}
               </button>
             </div>
-          </div>
-          {!capturing && itemKeys.length > 0 && (
-            <div className="flex min-w-0 items-center justify-end gap-2 lg:flex-1 lg:pl-3">
-              {meetingComplete ? (
-                <span className="truncate text-xs font-medium text-white/90">Reunión completada</span>
-              ) : nextItemLabel ? (
-                <span className="truncate text-xs font-medium text-white/90">
-                  Siguiente: {nextItemLabel}
+            {!capturing && itemKeys.length > 0 && (
+              <div className="flex min-w-0 max-w-full items-center justify-end gap-2">
+                {meetingComplete ? (
+                  <span className="truncate text-xs font-medium text-white/90">Reunión completada</span>
+                ) : nextItemLabel ? (
+                  <span className="truncate text-xs font-medium text-white/90">
+                    Siguiente: {nextItemLabel}
+                  </span>
+                ) : null}
+                <span className="shrink-0 text-xs font-medium tabular-nums text-white/50">
+                  {doneCount}/{itemKeys.length}
                 </span>
-              ) : null}
-              <span className="shrink-0 text-xs font-medium tabular-nums text-white/50">
-                {doneCount}/{itemKeys.length}
-              </span>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
         {shareError && (
           <p className="max-w-3xl mx-auto px-4 pb-2 text-xs text-red-200">{shareError}</p>
