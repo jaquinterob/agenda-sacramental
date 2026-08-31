@@ -1,30 +1,60 @@
 const VIEWPORT_PADDING = 12
+const GAP = 8
 
-export function measureAnchorPanel(anchor, panelWidth, minHeight = 160) {
+function getViewport() {
+  const visual = window.visualViewport
+  return {
+    width: visual?.width ?? window.innerWidth,
+    height: visual?.height ?? window.innerHeight,
+    offsetLeft: visual?.offsetLeft ?? 0,
+    offsetTop: visual?.offsetTop ?? 0,
+  }
+}
+
+export function measureAnchorPanel(anchor, preferredWidth, contentHeight = 160) {
   const rect = anchor.getBoundingClientRect()
-  const gap = 8
+  const viewport = getViewport()
+  const panelWidth = Math.min(preferredWidth, viewport.width - VIEWPORT_PADDING * 2)
 
   let left = rect.right - panelWidth
   left = Math.max(
-    VIEWPORT_PADDING,
-    Math.min(left, window.innerWidth - panelWidth - VIEWPORT_PADDING),
+    viewport.offsetLeft + VIEWPORT_PADDING,
+    Math.min(left, viewport.offsetLeft + viewport.width - panelWidth - VIEWPORT_PADDING),
   )
 
-  const spaceBelow = window.innerHeight - rect.bottom - gap - VIEWPORT_PADDING
-  const openUp = spaceBelow < minHeight && rect.top > spaceBelow + 40
+  const spaceBelow =
+    viewport.height - (rect.bottom - viewport.offsetTop) - GAP - VIEWPORT_PADDING
+  const spaceAbove = rect.top - viewport.offsetTop - GAP - VIEWPORT_PADDING
+  const openUp = spaceBelow < contentHeight && spaceAbove > spaceBelow
 
   if (!openUp) {
     return {
       left,
-      top: rect.bottom + gap,
-      maxHeight: Math.max(minHeight, spaceBelow),
+      width: panelWidth,
+      top: rect.bottom + GAP,
+      maxHeight: Math.max(80, spaceBelow),
     }
   }
 
-  const spaceAbove = rect.top - gap - VIEWPORT_PADDING
   return {
     left,
-    bottom: window.innerHeight - rect.top + gap,
-    maxHeight: Math.max(minHeight, spaceAbove),
+    width: panelWidth,
+    bottom: window.innerHeight - rect.top + GAP,
+    maxHeight: Math.max(80, spaceAbove),
+  }
+}
+
+export function anchorPanelStyle(panelLayout, zIndex = 100) {
+  if (!panelLayout) return null
+
+  return {
+    position: 'fixed',
+    left: panelLayout.left,
+    width: panelLayout.width,
+    maxHeight: panelLayout.maxHeight,
+    zIndex,
+    ...(panelLayout.top != null
+      ? { top: panelLayout.top }
+      : { bottom: panelLayout.bottom }),
   }
 }

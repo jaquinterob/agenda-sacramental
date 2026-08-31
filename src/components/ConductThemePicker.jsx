@@ -9,10 +9,10 @@ import {
   saveConductFontScale,
   saveConductTheme,
 } from '../utils/conductTheme'
-
-import { measureAnchorPanel } from '../utils/measureAnchorPanel'
+import { anchorPanelStyle, measureAnchorPanel } from '../utils/measureAnchorPanel'
 
 const PANEL_WIDTH = 256
+const PANEL_HEIGHT = 200
 
 export default function ConductThemePicker({ theme, fontScale, onThemeChange, onFontScaleChange }) {
   const [open, setOpen] = useState(false)
@@ -28,13 +28,20 @@ export default function ConductThemePicker({ theme, fontScale, onThemeChange, on
     }
 
     const updateLayout = () => {
-      if (buttonRef.current) setPanelLayout(measureAnchorPanel(buttonRef.current, PANEL_WIDTH))
+      if (buttonRef.current) {
+        setPanelLayout(measureAnchorPanel(buttonRef.current, PANEL_WIDTH, PANEL_HEIGHT))
+      }
     }
 
     updateLayout()
+    const visualViewport = window.visualViewport
+    visualViewport?.addEventListener('resize', updateLayout)
+    visualViewport?.addEventListener('scroll', updateLayout)
     window.addEventListener('resize', updateLayout)
     window.addEventListener('scroll', updateLayout, true)
     return () => {
+      visualViewport?.removeEventListener('resize', updateLayout)
+      visualViewport?.removeEventListener('scroll', updateLayout)
       window.removeEventListener('resize', updateLayout)
       window.removeEventListener('scroll', updateLayout, true)
     }
@@ -42,16 +49,20 @@ export default function ConductThemePicker({ theme, fontScale, onThemeChange, on
 
   useEffect(() => {
     if (!open) return
+
     const handlePointer = (event) => {
       const target = event.target
       if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
       setOpen(false)
     }
-    document.addEventListener('mousedown', handlePointer)
-    document.addEventListener('touchstart', handlePointer)
+
+    const id = window.setTimeout(() => {
+      document.addEventListener('pointerdown', handlePointer)
+    }, 0)
+
     return () => {
-      document.removeEventListener('mousedown', handlePointer)
-      document.removeEventListener('touchstart', handlePointer)
+      window.clearTimeout(id)
+      document.removeEventListener('pointerdown', handlePointer)
     }
   }, [open])
 
@@ -63,16 +74,7 @@ export default function ConductThemePicker({ theme, fontScale, onThemeChange, on
         ref={panelRef}
         role="dialog"
         aria-label="Tema de presentación"
-        style={{
-          position: 'fixed',
-          left: panelLayout.left,
-          width: PANEL_WIDTH,
-          maxHeight: panelLayout.maxHeight,
-          zIndex: 100,
-          ...(panelLayout.top != null
-            ? { top: panelLayout.top }
-            : { bottom: panelLayout.bottom }),
-        }}
+        style={anchorPanelStyle(panelLayout)}
         className="overflow-y-auto overscroll-contain rounded-xl border border-white/10 bg-brand-900 p-4 shadow-xl"
       >
         <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 mb-2">Tema</p>
