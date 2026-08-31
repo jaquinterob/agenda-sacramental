@@ -102,6 +102,14 @@ body {
   --conduct-stand-cue-border: rgb(158 184 220 / 0.45);
 }
 
+.conduct-theme-root[data-conduct-theme='midnight'] .church-logo {
+  filter: invert(1) brightness(0.96);
+}
+
+.conduct-theme-root .pdf-capture .church-logo {
+  filter: none;
+}
+
 .conduct-theme-root .conduct-surface {
   background-color: var(--conduct-surface);
 }
