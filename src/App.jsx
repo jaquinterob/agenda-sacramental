@@ -14,7 +14,7 @@ export default function App() {
   const [conductReadOnly, setConductReadOnly] = useState(false)
 
   useEffect(() => {
-    fetch('/data/hymns.json')
+    fetch(`${import.meta.env.BASE_URL}data/hymns.json`)
       .then((res) => res.json())
       .then((data) => {
         setHymns(data)
