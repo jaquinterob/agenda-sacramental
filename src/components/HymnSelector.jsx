@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { FormLabel } from './ItemTypeIcon'
+import { useListTapSelect } from '../utils/listTapSelect'
 
 export default function HymnSelector({
   label,
@@ -20,6 +21,7 @@ export default function HymnSelector({
   const skipAutoFocusRef = useRef(
     typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
   )
+  const bindTapSelect = useListTapSelect()
 
   const categories = useMemo(() => {
     return [...new Set(hymns.map((h) => h.category))].sort()
@@ -72,20 +74,14 @@ export default function HymnSelector({
         setQuery('')
       }
     }
-    document.addEventListener('pointerdown', handleClickOutside)
-    return () => document.removeEventListener('pointerdown', handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [isOpen])
 
   const selectHymn = (hymn) => {
     onChange(hymn.number)
     setQuery('')
     setIsOpen(false)
-  }
-
-  const pickHymn = (e, hymn) => {
-    e.preventDefault()
-    e.stopPropagation()
-    selectHymn(hymn)
   }
 
   const handleKeyDown = (e) => {
@@ -135,7 +131,9 @@ export default function HymnSelector({
           className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 bg-white cursor-pointer hover:border-slate-400 transition-colors"
           onClick={() => {
             setIsOpen(true)
-            inputRef.current?.focus()
+            if (!skipAutoFocusRef.current) {
+              inputRef.current?.focus()
+            }
           }}
         >
           {selected ? (
@@ -198,7 +196,11 @@ export default function HymnSelector({
                 </p>
               )}
             </div>
-            <ul ref={listRef} role="listbox" className="max-h-60 overflow-y-auto overscroll-contain">
+            <ul
+              ref={listRef}
+              role="listbox"
+              className="max-h-60 overflow-y-auto overscroll-contain touch-pan-y"
+            >
               {filtered.length === 0 ? (
                 <li className="px-3 py-4 text-center text-gray-400 text-sm">
                   No se encontraron himnos
@@ -210,8 +212,8 @@ export default function HymnSelector({
                       type="button"
                       role="option"
                       aria-selected={value === hymn.number}
-                      onPointerDown={(e) => pickHymn(e, hymn)}
-                      className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm touch-manipulation ${
+                      {...bindTapSelect(() => selectHymn(hymn))}
+                      className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm ${
                         idx === highlightIdx ? 'bg-slate-100' : 'hover:bg-gray-50 active:bg-slate-100'
                       }`}
                     >

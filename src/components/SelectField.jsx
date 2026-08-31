@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useListTapSelect } from '../utils/listTapSelect'
 
 const triggerClass =
   'flex w-full items-center justify-between gap-2 px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-brand-700/10 focus:border-brand-700'
@@ -28,6 +29,7 @@ export default function SelectField({
   const [open, setOpen] = useState(false)
   const [highlightIdx, setHighlightIdx] = useState(-1)
   const containerRef = useRef(null)
+  const bindTapSelect = useListTapSelect()
 
   const selected = options.find((option) => option.value === value)
 
@@ -39,20 +41,14 @@ export default function SelectField({
         setHighlightIdx(-1)
       }
     }
-    document.addEventListener('pointerdown', handleClickOutside)
-    return () => document.removeEventListener('pointerdown', handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [open])
 
   const select = (optionValue) => {
     onChange(optionValue)
     setOpen(false)
     setHighlightIdx(-1)
-  }
-
-  const pickOption = (e, optionValue) => {
-    e.preventDefault()
-    e.stopPropagation()
-    select(optionValue)
   }
 
   const handleKeyDown = (event) => {
@@ -107,7 +103,7 @@ export default function SelectField({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-[60] mt-1 w-full max-h-60 overflow-y-auto overscroll-contain rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute z-[60] mt-1 w-full max-h-60 overflow-y-auto overscroll-contain touch-pan-y rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
         >
           {options.map((option, index) => {
             const isSelected = value === option.value
@@ -120,9 +116,9 @@ export default function SelectField({
                   role="option"
                   aria-selected={isSelected}
                   onMouseEnter={() => setHighlightIdx(index)}
-                  onPointerDown={(e) => pickOption(e, option.value)}
+                  {...bindTapSelect(() => select(option.value))}
                   className={[
-                    'flex w-full px-3 py-2.5 text-left text-sm touch-manipulation transition-colors',
+                    'flex w-full px-3 py-2.5 text-left text-sm transition-colors',
                     isSelected ? 'font-medium text-slate-900' : 'text-slate-700',
                     isHighlighted || isSelected ? 'bg-slate-100' : 'hover:bg-gray-50 active:bg-slate-100',
                   ].join(' ')}
