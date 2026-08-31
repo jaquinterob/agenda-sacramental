@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { CaretRight, ProjectorScreen } from '@phosphor-icons/react'
 import HymnSelector from './HymnSelector'
+import FormOptionsMenu from './FormOptionsMenu'
 import { ProgramItemsEditor } from './DraggableList'
 import { StepHeader, StepNav, StepProgress } from './StepWizard'
 import { estimateSacramentMinutes, MEETING_TOTAL_MINUTES } from '../utils/buildConductSchedule'
@@ -55,6 +56,7 @@ export default function AgendaForm({
   stepIndex,
   setStepIndex,
   onOpenPresentation,
+  onClearDraft,
 }) {
   const isSacrament = form.meetingType === 'sacrament'
   const steps = getMeetingSteps(form.meetingType)
@@ -438,7 +440,7 @@ export default function AgendaForm({
           <p className="text-sm text-gray-500 mt-0.5">Generador de programa de reunión</p>
           </div>
         </div>
-        <div className="flex shrink-0 justify-end">
+        <div className="flex shrink-0 items-center justify-end gap-2">
           <button
             type="button"
             onClick={openPresentation}
@@ -457,6 +459,7 @@ export default function AgendaForm({
               aria-hidden="true"
             />
           </button>
+          <FormOptionsMenu onClearDraft={onClearDraft} />
         </div>
       </header>
 

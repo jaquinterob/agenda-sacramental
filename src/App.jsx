@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AgendaForm from './components/AgendaForm'
 import AgendaConduct from './components/AgendaConduct'
 import { createInitialAgenda } from './utils/agendaForm'
 import { readAgendaFromLocation, SHARE_MODES } from './utils/agendaShareLink'
+import { clearAgendaDraft, loadAgendaDraft, saveAgendaDraft } from './utils/agendaStorage'
 import ChurchLogo from './components/ChurchLogo'
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
   const [stepIndex, setStepIndex] = useState(0)
   const [view, setView] = useState('form')
   const [conductReadOnly, setConductReadOnly] = useState(false)
+  const hydratedRef = useRef(false)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}data/hymns.json`)
@@ -28,6 +30,7 @@ export default function App() {
 
   useEffect(() => {
     if (loading) return
+
     const shared = readAgendaFromLocation()
     if (shared) {
       setAgenda(shared.agenda)
@@ -38,8 +41,36 @@ export default function App() {
         setView('conduct')
         setConductReadOnly(true)
       }
+    } else {
+      const draft = loadAgendaDraft()
+      if (draft) {
+        setAgenda(draft.agenda)
+        setStepIndex(draft.stepIndex)
+      }
     }
+
+    hydratedRef.current = true
   }, [loading])
+
+  useEffect(() => {
+    if (loading || !hydratedRef.current) return
+    saveAgendaDraft(agenda, stepIndex)
+  }, [agenda, stepIndex, loading])
+
+  const clearDraft = () => {
+    if (
+      !window.confirm(
+        '¿Borrar todo el programa guardado en este dispositivo? No se puede deshacer.',
+      )
+    ) {
+      return
+    }
+
+    clearAgendaDraft()
+    setAgenda(createInitialAgenda())
+    setStepIndex(0)
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+  }
 
   if (loading) {
     return (
@@ -73,6 +104,7 @@ export default function App() {
         setForm={setAgenda}
         stepIndex={stepIndex}
         setStepIndex={setStepIndex}
+        onClearDraft={clearDraft}
         onOpenPresentation={() => {
           setConductReadOnly(false)
           setView('conduct')

@@ -39,14 +39,20 @@ export default function SelectField({
         setHighlightIdx(-1)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('pointerdown', handleClickOutside)
+    return () => document.removeEventListener('pointerdown', handleClickOutside)
   }, [open])
 
   const select = (optionValue) => {
     onChange(optionValue)
     setOpen(false)
     setHighlightIdx(-1)
+  }
+
+  const pickOption = (e, optionValue) => {
+    e.preventDefault()
+    e.stopPropagation()
+    select(optionValue)
   }
 
   const handleKeyDown = (event) => {
@@ -101,26 +107,28 @@ export default function SelectField({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute z-[60] mt-1 w-full max-h-60 overflow-y-auto overscroll-contain rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
         >
           {options.map((option, index) => {
             const isSelected = value === option.value
             const isHighlighted = index === highlightIdx
 
             return (
-              <li
-                key={option.value}
-                role="option"
-                aria-selected={isSelected}
-                onMouseEnter={() => setHighlightIdx(index)}
-                onClick={() => select(option.value)}
-                className={[
-                  'cursor-pointer px-3 py-2 text-sm transition-colors',
-                  isSelected ? 'font-medium text-slate-900' : 'text-slate-700',
-                  isHighlighted || isSelected ? 'bg-slate-100' : 'hover:bg-gray-50',
-                ].join(' ')}
-              >
-                {option.label}
+              <li key={option.value} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onMouseEnter={() => setHighlightIdx(index)}
+                  onPointerDown={(e) => pickOption(e, option.value)}
+                  className={[
+                    'flex w-full px-3 py-2.5 text-left text-sm touch-manipulation transition-colors',
+                    isSelected ? 'font-medium text-slate-900' : 'text-slate-700',
+                    isHighlighted || isSelected ? 'bg-slate-100' : 'hover:bg-gray-50 active:bg-slate-100',
+                  ].join(' ')}
+                >
+                  {option.label}
+                </button>
               </li>
             )
           })}

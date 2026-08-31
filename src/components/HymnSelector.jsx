@@ -17,6 +17,9 @@ export default function HymnSelector({
   const containerRef = useRef(null)
   const listRef = useRef(null)
   const inputRef = useRef(null)
+  const skipAutoFocusRef = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
+  )
 
   const categories = useMemo(() => {
     return [...new Set(hymns.map((h) => h.category))].sort()
@@ -60,20 +63,29 @@ export default function HymnSelector({
 
   useEffect(() => {
     if (!isOpen) return
+    if (!skipAutoFocusRef.current) {
+      inputRef.current?.focus()
+    }
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false)
         setQuery('')
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('pointerdown', handleClickOutside)
+    return () => document.removeEventListener('pointerdown', handleClickOutside)
   }, [isOpen])
 
   const selectHymn = (hymn) => {
     onChange(hymn.number)
     setQuery('')
     setIsOpen(false)
+  }
+
+  const pickHymn = (e, hymn) => {
+    e.preventDefault()
+    e.stopPropagation()
+    selectHymn(hymn)
   }
 
   const handleKeyDown = (e) => {
@@ -146,7 +158,7 @@ export default function HymnSelector({
         </div>
 
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="absolute z-[60] mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="p-2 border-b border-gray-100 space-y-2">
               <input
                 ref={inputRef}
@@ -158,7 +170,7 @@ export default function HymnSelector({
                 }}
                 onKeyDown={handleKeyDown}
                 className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-400"
-                autoFocus
+                placeholder="Buscar por número o título…"
               />
               <select
                 value={category}
@@ -186,22 +198,26 @@ export default function HymnSelector({
                 </p>
               )}
             </div>
-            <ul ref={listRef} className="max-h-60 overflow-y-auto">
+            <ul ref={listRef} role="listbox" className="max-h-60 overflow-y-auto overscroll-contain">
               {filtered.length === 0 ? (
                 <li className="px-3 py-4 text-center text-gray-400 text-sm">
                   No se encontraron himnos
                 </li>
               ) : (
                 filtered.map((hymn, idx) => (
-                  <li
-                    key={hymn.number}
-                    onClick={() => selectHymn(hymn)}
-                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer text-sm ${
-                      idx === highlightIdx ? 'bg-slate-100' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className="text-gray-400 font-mono w-10 text-right shrink-0">{hymn.number}</span>
-                    <span className="text-gray-900 truncate flex-1">{hymn.title}</span>
+                  <li key={hymn.number} role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={value === hymn.number}
+                      onPointerDown={(e) => pickHymn(e, hymn)}
+                      className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm touch-manipulation ${
+                        idx === highlightIdx ? 'bg-slate-100' : 'hover:bg-gray-50 active:bg-slate-100'
+                      }`}
+                    >
+                      <span className="text-gray-400 font-mono w-10 text-right shrink-0">{hymn.number}</span>
+                      <span className="text-gray-900 truncate flex-1">{hymn.title}</span>
+                    </button>
                   </li>
                 ))
               )}
