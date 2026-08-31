@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { FormLabel } from './ItemTypeIcon'
 
 const fieldClass =
   'w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-700/10 focus:border-brand-700 transition'
 
 const MAX_RESULTS = 25
+const STEP_NAV_RESERVE = 104
 
 function formatHymn(hymn) {
   return `${hymn.number} — ${hymn.title}`
@@ -18,6 +20,21 @@ function filterHymns(hymns, query) {
   )
 }
 
+function measureDropdown(input) {
+  const rect = input.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom - STEP_NAV_RESERVE
+  const spaceAbove = rect.top - 12
+  const openUp = spaceBelow < 160 && spaceAbove > spaceBelow
+  const maxHeight = Math.max(120, Math.min(280, openUp ? spaceAbove - 8 : spaceBelow - 8))
+
+  return {
+    top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
+    left: rect.left,
+    width: rect.width,
+    maxHeight,
+  }
+}
+
 export default function HymnSelector({
   label,
   iconType = 'hymn',
@@ -26,9 +43,11 @@ export default function HymnSelector({
   onChange,
   sacramentOnly = false,
 }) {
+  const listboxId = useId()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [dropdownLayout, setDropdownLayout] = useState(null)
   const containerRef = useRef(null)
   const inputRef = useRef(null)
   const listRef = useRef(null)
@@ -46,6 +65,7 @@ export default function HymnSelector({
   const results = useMemo(() => filterHymns(pool, query), [pool, query])
   const visibleResults = results.slice(0, MAX_RESULTS)
   const inputValue = open ? query : selected ? formatHymn(selected) : ''
+  const showList = open && query.trim().length > 0
 
   useEffect(() => {
     setActiveIndex(visibleResults.length > 0 ? 0 : -1)
@@ -57,11 +77,31 @@ export default function HymnSelector({
   }, [activeIndex])
 
   useEffect(() => {
+    if (!showList || !inputRef.current) {
+      setDropdownLayout(null)
+      return
+    }
+
+    const updateLayout = () => {
+      if (inputRef.current) setDropdownLayout(measureDropdown(inputRef.current))
+    }
+
+    updateLayout()
+    window.addEventListener('resize', updateLayout)
+    window.addEventListener('scroll', updateLayout, true)
+    return () => {
+      window.removeEventListener('resize', updateLayout)
+      window.removeEventListener('scroll', updateLayout, true)
+    }
+  }, [showList, query])
+
+  useEffect(() => {
     if (!open) return
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        closeList()
-      }
+      const target = event.target
+      if (containerRef.current?.contains(target)) return
+      if (listRef.current?.contains(target)) return
+      closeList()
     }
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
@@ -71,6 +111,7 @@ export default function HymnSelector({
     setOpen(false)
     setQuery('')
     setActiveIndex(-1)
+    setDropdownLayout(null)
   }
 
   const pickHymn = (hymn) => {
@@ -131,10 +172,58 @@ export default function HymnSelector({
     inputRef.current?.focus()
   }
 
-  const showList = open && query.trim().length > 0
   const placeholder = sacramentOnly
     ? 'Escribe número o título del himno sacramental…'
     : 'Escribe número o título del himno…'
+
+  const dropdown =
+    showList &&
+    dropdownLayout &&
+    createPortal(
+      <ul
+        ref={listRef}
+        id={listboxId}
+        role="listbox"
+        style={{
+          position: 'fixed',
+          top: dropdownLayout.top,
+          left: dropdownLayout.left,
+          width: dropdownLayout.width,
+          maxHeight: dropdownLayout.maxHeight,
+          zIndex: 100,
+        }}
+        className="overflow-y-auto overscroll-contain touch-pan-y rounded-lg border border-gray-200 bg-white py-1 shadow-[0_16px_40px_rgba(15,23,42,0.16)]"
+      >
+        {visibleResults.length === 0 ? (
+          <li className="px-3 py-3 text-sm text-slate-500">No se encontraron himnos.</li>
+        ) : (
+          visibleResults.map((hymn, index) => (
+            <li key={hymn.number} role="presentation">
+              <button
+                type="button"
+                role="option"
+                aria-selected={value === hymn.number}
+                onClick={() => pickHymn(hymn)}
+                className={[
+                  'flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm',
+                  index === activeIndex ? 'bg-slate-100' : 'hover:bg-slate-50 active:bg-slate-100',
+                ].join(' ')}
+              >
+                <span className="w-10 shrink-0 text-right font-mono text-slate-400">{hymn.number}</span>
+                <span className="min-w-0 flex-1 truncate text-slate-900">{hymn.title}</span>
+              </button>
+            </li>
+          ))
+        )}
+
+        {results.length > MAX_RESULTS && (
+          <li className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
+            Mostrando {MAX_RESULTS} de {results.length}. Escribe más para acotar.
+          </li>
+        )}
+      </ul>,
+      document.body,
+    )
 
   return (
     <div ref={containerRef} className="relative">
@@ -147,7 +236,7 @@ export default function HymnSelector({
           role="combobox"
           aria-expanded={showList}
           aria-autocomplete="list"
-          aria-controls="hymn-selector-listbox"
+          aria-controls={listboxId}
           value={inputValue}
           onFocus={handleFocus}
           onChange={handleChange}
@@ -171,42 +260,7 @@ export default function HymnSelector({
         )}
       </div>
 
-      {showList && (
-        <ul
-          ref={listRef}
-          id="hymn-selector-listbox"
-          role="listbox"
-          className="absolute z-[60] mt-1 max-h-60 w-full overflow-y-auto overscroll-contain touch-pan-y rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-        >
-          {visibleResults.length === 0 ? (
-            <li className="px-3 py-3 text-sm text-slate-500">No se encontraron himnos.</li>
-          ) : (
-            visibleResults.map((hymn, index) => (
-              <li key={hymn.number} role="presentation">
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={value === hymn.number}
-                  onClick={() => pickHymn(hymn)}
-                  className={[
-                    'flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm',
-                    index === activeIndex ? 'bg-slate-100' : 'hover:bg-slate-50 active:bg-slate-100',
-                  ].join(' ')}
-                >
-                  <span className="w-10 shrink-0 text-right font-mono text-slate-400">{hymn.number}</span>
-                  <span className="min-w-0 flex-1 truncate text-slate-900">{hymn.title}</span>
-                </button>
-              </li>
-            ))
-          )}
-
-          {results.length > MAX_RESULTS && (
-            <li className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
-              Mostrando {MAX_RESULTS} de {results.length}. Escribe más para acotar.
-            </li>
-          )}
-        </ul>
-      )}
+      {dropdown}
 
       {!showList && !selected && (
         <p className="mt-1.5 text-xs text-slate-500">Escribe para buscar en la lista de himnos.</p>
