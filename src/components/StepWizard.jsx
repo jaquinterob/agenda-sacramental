@@ -1,8 +1,9 @@
-export function StepProgress({ steps, currentIndex, onStepSelect }) {
+export function StepProgress({ steps, currentIndex, onStepSelect, stepAlerts = [] }) {
   const total = steps.length
   const progress = total > 1 ? Math.round((currentIndex / (total - 1)) * 100) : 100
   const barPercent = Math.round(((currentIndex + 1) / total) * 100)
   const current = steps[currentIndex]
+  const currentHasAlert = Boolean(stepAlerts[currentIndex])
 
   return (
     <nav aria-label="Pasos del programa" className="mb-8">
@@ -19,8 +20,8 @@ export function StepProgress({ steps, currentIndex, onStepSelect }) {
         </p>
       </div>
 
-      <div className="md:hidden space-y-2" aria-hidden="true">
-        <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+      <div className="md:hidden space-y-2">
+        <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden" aria-hidden="true">
           <div
             className="h-full rounded-full bg-brand-700 transition-all duration-300"
             style={{ width: `${barPercent}%` }}
@@ -32,6 +33,9 @@ export function StepProgress({ steps, currentIndex, onStepSelect }) {
             {currentIndex + 1} / {total}
           </span>
         </div>
+        {currentHasAlert && (
+          <p className="text-[11px] font-medium text-amber-700">Campos pendientes</p>
+        )}
       </div>
 
       <ol className="hidden md:flex w-full list-none m-0 p-0">
@@ -41,6 +45,7 @@ export function StepProgress({ steps, currentIndex, onStepSelect }) {
           const isPending = i > currentIndex
           const isReachable = i <= currentIndex
           const segmentFilled = i > 0 && i <= currentIndex
+          const hasAlert = Boolean(stepAlerts[i])
 
           return (
             <li
@@ -77,40 +82,55 @@ export function StepProgress({ steps, currentIndex, onStepSelect }) {
                   .filter(Boolean)
                   .join(' ')}
                 aria-label={
-                  isActive
-                    ? `${step.shortTitle}, paso actual`
-                    : isDone
-                      ? `Ir a ${step.shortTitle}`
-                      : `${step.shortTitle}, aún no disponible`
+                  [
+                    isActive
+                      ? `${step.shortTitle}, paso actual`
+                      : isDone
+                        ? `Ir a ${step.shortTitle}`
+                        : `${step.shortTitle}, aún no disponible`,
+                    hasAlert ? 'campos pendientes' : null,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')
                 }
               >
                 <span
                   className={[
                     'relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300',
-                    isDone && 'border-brand-700 bg-brand-700 text-white',
-                    isActive && 'border-brand-700 bg-white text-slate-900 shadow-sm',
-                    isPending && 'border-slate-200 bg-white text-slate-300',
+                    hasAlert && isActive && 'border-amber-500 bg-white text-slate-900 shadow-sm',
+                    hasAlert && isDone && 'border-amber-500 bg-amber-50 text-amber-800',
+                    hasAlert && isPending && 'border-amber-300 bg-white text-amber-500',
+                    !hasAlert && isDone && 'border-brand-700 bg-brand-700 text-white',
+                    !hasAlert && isActive && 'border-brand-700 bg-white text-slate-900 shadow-sm',
+                    !hasAlert && isPending && 'border-slate-200 bg-white text-slate-300',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                 >
-                  {isDone ? (
+                  {isDone && !hasAlert ? (
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className={`text-xs font-bold tabular-nums ${isActive ? 'text-slate-900' : ''}`}>
+                    <span className={`text-xs font-bold tabular-nums ${isActive || hasAlert ? 'text-inherit' : ''}`}>
                       {i + 1}
                     </span>
+                  )}
+                  {hasAlert && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400"
+                      aria-hidden="true"
+                    />
                   )}
                 </span>
 
                 <span
                   className={[
                     'mt-2 w-full text-[10px] font-semibold text-center leading-tight min-h-[2rem]',
-                    isActive && 'text-slate-900',
-                    isDone && 'text-slate-600',
-                    isPending && 'text-slate-400',
+                    hasAlert && 'text-amber-700',
+                    !hasAlert && isActive && 'text-slate-900',
+                    !hasAlert && isDone && 'text-slate-600',
+                    !hasAlert && isPending && 'text-slate-400',
                   ]
                     .filter(Boolean)
                     .join(' ')}

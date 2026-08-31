@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { CaretRight, ProjectorScreen } from '@phosphor-icons/react'
 import HymnSelector from './HymnSelector'
 import FormOptionsMenu from './FormOptionsMenu'
@@ -7,6 +7,7 @@ import { StepHeader, StepNav, StepProgress } from './StepWizard'
 import { estimateSacramentMinutes, MEETING_TOTAL_MINUTES } from '../utils/buildConductSchedule'
 import { getMeetingSteps } from '../utils/meetingSteps'
 import { defaultProgramItems } from '../utils/programItems'
+import { getStepAlerts } from '../utils/stepValidation'
 import { WardBusinessList } from './WardBusinessEditor'
 import { VisitorsEditor } from './VisitorsEditor'
 import { FormLabel, SectionLabel } from './ItemTypeIcon'
@@ -61,6 +62,7 @@ export default function AgendaForm({
   const isSacrament = form.meetingType === 'sacrament'
   const steps = getMeetingSteps(form.meetingType)
   const currentStep = steps[stepIndex]
+  const stepAlerts = useMemo(() => getStepAlerts(form, form.meetingType), [form])
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -463,7 +465,12 @@ export default function AgendaForm({
         </div>
       </header>
 
-      <StepProgress steps={steps} currentIndex={stepIndex} onStepSelect={setStepIndex} />
+      <StepProgress
+        steps={steps}
+        currentIndex={stepIndex}
+        onStepSelect={setStepIndex}
+        stepAlerts={stepAlerts}
+      />
 
       <div key={currentStep.id} className="step-fade">
         <StepHeader step={currentStep} />
