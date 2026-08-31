@@ -1,41 +1,78 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { DotsThreeVertical, FloppyDisk, Trash } from '@phosphor-icons/react'
-import AnchorDropdownPanel from './AnchorDropdownPanel'
+import { anchorPanelStyle, measureAnchorPanel } from '../utils/measureAnchorPanel'
+
+const PANEL_WIDTH = 256
+const PANEL_HEIGHT = 200
 
 export default function FormOptionsMenu({ onClearDraft }) {
   const [open, setOpen] = useState(false)
+  const [panelLayout, setPanelLayout] = useState(null)
   const rootRef = useRef(null)
   const buttonRef = useRef(null)
+  const panelRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) {
+      setPanelLayout(null)
+      return
+    }
+
+    const updateLayout = () => {
+      if (buttonRef.current) {
+        setPanelLayout(measureAnchorPanel(buttonRef.current, PANEL_WIDTH, PANEL_HEIGHT))
+      }
+    }
+
+    updateLayout()
+    const visualViewport = window.visualViewport
+    visualViewport?.addEventListener('resize', updateLayout)
+    visualViewport?.addEventListener('scroll', updateLayout)
+    window.addEventListener('resize', updateLayout)
+    window.addEventListener('scroll', updateLayout, true)
+    return () => {
+      visualViewport?.removeEventListener('resize', updateLayout)
+      visualViewport?.removeEventListener('scroll', updateLayout)
+      window.removeEventListener('resize', updateLayout)
+      window.removeEventListener('scroll', updateLayout, true)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+
+    const handlePointer = (event) => {
+      const target = event.target
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
+      setOpen(false)
+    }
+
+    const id = window.setTimeout(() => {
+      document.addEventListener('pointerdown', handlePointer)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(id)
+      document.removeEventListener('pointerdown', handlePointer)
+    }
+  }, [open])
 
   const handleClear = () => {
     setOpen(false)
     onClearDraft()
   }
 
-  return (
-    <div className="relative" ref={rootRef}>
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/20"
-        aria-expanded={open}
-        aria-haspopup="menu"
+  const panel =
+    open &&
+    panelLayout &&
+    createPortal(
+      <div
+        ref={panelRef}
+        role="menu"
         aria-label="Opciones del programa"
-        title="Opciones"
-      >
-        <DotsThreeVertical className="h-5 w-5" weight="bold" aria-hidden="true" />
-      </button>
-
-      <AnchorDropdownPanel
-        open={open}
-        anchorRef={buttonRef}
-        preferredWidth={288}
-        contentHeight={240}
-        zIndex={70}
-        ariaLabel="Opciones del programa"
-        className="rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]"
-        onClose={() => setOpen(false)}
+        style={anchorPanelStyle(panelLayout, 70)}
+        className="overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]"
       >
         <div className="border-b border-slate-100 px-4 py-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
@@ -72,7 +109,25 @@ export default function FormOptionsMenu({ onClearDraft }) {
             </span>
           </button>
         </div>
-      </AnchorDropdownPanel>
+      </div>,
+      document.body,
+    )
+
+  return (
+    <div className="relative" ref={rootRef}>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-colors hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/20"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Opciones del programa"
+        title="Opciones"
+      >
+        <DotsThreeVertical className="h-5 w-5" weight="bold" aria-hidden="true" />
+      </button>
+      {panel}
     </div>
   )
 }
