@@ -200,8 +200,24 @@ function ScheduleItem({ item, visitors, onVisitorsChange, done, current, onToggl
         </TimelineRow>
       )
 
-    case 'list':
+    case 'list': {
+      const hasItems = item.items?.length > 0
+      const emptyNotice = (
+        <p className="mt-1.5 text-sm text-slate-600 leading-relaxed italic">
+          {item.emptyMessage || 'No hay asuntos que presentar.'}
+        </p>
+      )
+
       if (exportMode) {
+        if (!hasItems) {
+          return (
+            <TimelineRow time={item.time} {...rowProps}>
+              <TypeLabel type={scheduleItemIconType(item)}>{item.title}</TypeLabel>
+              {emptyNotice}
+            </TimelineRow>
+          )
+        }
+
         return item.items.map((entry, i) => {
           const businessItem = normalizeWardBusinessItem(entry)
 
@@ -260,52 +276,57 @@ function ScheduleItem({ item, visitors, onVisitorsChange, done, current, onToggl
       return (
         <TimelineRow time={item.time} {...rowProps}>
           <TypeLabel type={scheduleItemIconType(item)}>{item.title}</TypeLabel>
-          <ul className="mt-1.5 space-y-3">
-            {item.items.map((entry, i) => {
-              const businessItem = normalizeWardBusinessItem(entry)
+          {!hasItems ? (
+            emptyNotice
+          ) : (
+            <ul className="mt-1.5 space-y-3">
+              {item.items.map((entry, i) => {
+                const businessItem = normalizeWardBusinessItem(entry)
 
-              if (businessItem.type === 'welcome') {
+                if (businessItem.type === 'welcome') {
+                  return (
+                    <li key={i} className="space-y-1">
+                      <TypeLabel type="welcome" className="mb-1">
+                        Bienvenida al barrio
+                      </TypeLabel>
+                      <WardScriptText parts={buildWardWelcomeParts(businessItem.names)} className="text-sm" />
+                    </li>
+                  )
+                }
+
+                if (businessItem.type === 'release') {
+                  return (
+                    <li key={i} className="space-y-1">
+                      <TypeLabel type="release" className="mb-1">
+                        Relevos
+                      </TypeLabel>
+                      <WardScriptText parts={buildWardReleaseParts(businessItem.releases)} className="text-sm" />
+                    </li>
+                  )
+                }
+
+                if (businessItem.type === 'sustaining') {
+                  return (
+                    <li key={i} className="space-y-1">
+                      <TypeLabel type="sustaining" className="mb-1">
+                        Sostenimientos
+                      </TypeLabel>
+                      <WardScriptText parts={buildWardSustainingParts(businessItem.callings)} className="text-sm" />
+                    </li>
+                  )
+                }
+
                 return (
-                  <li key={i} className="space-y-1">
-                    <TypeLabel type="welcome" className="mb-1">
-                      Bienvenida al barrio
-                    </TypeLabel>
-                    <WardScriptText parts={buildWardWelcomeParts(businessItem.names)} className="text-sm" />
+                  <li key={i} className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+                    {businessItem.text}
                   </li>
                 )
-              }
-
-              if (businessItem.type === 'release') {
-                return (
-                  <li key={i} className="space-y-1">
-                    <TypeLabel type="release" className="mb-1">
-                      Relevos
-                    </TypeLabel>
-                    <WardScriptText parts={buildWardReleaseParts(businessItem.releases)} className="text-sm" />
-                  </li>
-                )
-              }
-
-              if (businessItem.type === 'sustaining') {
-                return (
-                  <li key={i} className="space-y-1">
-                    <TypeLabel type="sustaining" className="mb-1">
-                      Sostenimientos
-                    </TypeLabel>
-                    <WardScriptText parts={buildWardSustainingParts(businessItem.callings)} className="text-sm" />
-                  </li>
-                )
-              }
-
-              return (
-                <li key={i} className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
-                  {businessItem.text}
-                </li>
-              )
-            })}
-          </ul>
+              })}
+            </ul>
+          )}
         </TimelineRow>
       )
+    }
 
     case 'hymn':
       return (

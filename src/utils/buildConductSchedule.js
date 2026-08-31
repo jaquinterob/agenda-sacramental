@@ -156,25 +156,21 @@ export function buildConductSchedule(agenda, hymns) {
   tick(DURATION.openingWorship, null)
 
   // —— Paso: Asuntos ——
-  if (wardBusiness.length || stakeBusiness.length) {
-    beginPhase('business')
-    if (wardBusiness.length) {
-      tick(DURATION.wardBusiness, {
-        type: 'list',
-        listKind: 'ward',
-        title: 'Asuntos del barrio',
-        items: wardBusiness,
-      })
-    }
-    if (stakeBusiness.length) {
-      tick(DURATION.stakeBusiness, {
-        type: 'list',
-        listKind: 'stake',
-        title: 'Asuntos de la estaca',
-        items: stakeBusiness,
-      })
-    }
-  }
+  beginPhase('business')
+  tick(wardBusiness.length ? DURATION.wardBusiness : 0, {
+    type: 'list',
+    listKind: 'ward',
+    title: 'Asuntos del barrio',
+    items: wardBusiness,
+    emptyMessage: 'No hay asuntos del barrio.',
+  })
+  tick(stakeBusiness.length ? DURATION.stakeBusiness : 0, {
+    type: 'list',
+    listKind: 'stake',
+    title: 'Asuntos de la estaca',
+    items: stakeBusiness,
+    emptyMessage: 'No hay asuntos de la estaca.',
+  })
 
   // —— Paso: Santa Cena ——
   if (isSacrament && sacramentHymn) {
