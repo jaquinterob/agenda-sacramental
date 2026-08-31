@@ -15,12 +15,15 @@ export default function AnchorDropdownPanel({
 }) {
   const panelRef = useRef(null)
   const [panelLayout, setPanelLayout] = useState(null)
+  const ignoreCloseUntilRef = useRef(0)
 
   useEffect(() => {
     if (!open) {
       setPanelLayout(null)
       return
     }
+
+    ignoreCloseUntilRef.current = Date.now() + 350
 
     const updateLayout = () => {
       if (anchorRef.current) {
@@ -45,23 +48,24 @@ export default function AnchorDropdownPanel({
   useEffect(() => {
     if (!open) return
 
-    const handlePointer = (event) => {
+    const handleOutside = (event) => {
+      if (Date.now() < ignoreCloseUntilRef.current) return
       const target = event.target
       if (anchorRef.current?.contains(target) || panelRef.current?.contains(target)) return
       onClose()
     }
 
-    const id = window.setTimeout(() => {
-      document.addEventListener('pointerdown', handlePointer)
-    }, 0)
-
+    document.addEventListener('pointerdown', handleOutside, true)
+    document.addEventListener('touchstart', handleOutside, true)
     return () => {
-      window.clearTimeout(id)
-      document.removeEventListener('pointerdown', handlePointer)
+      document.removeEventListener('pointerdown', handleOutside, true)
+      document.removeEventListener('touchstart', handleOutside, true)
     }
   }, [open, anchorRef, onClose])
 
   if (!open || !panelLayout) return null
+
+  const sheetClass = panelLayout.isBottomSheet ? 'rounded-t-2xl rounded-b-none' : ''
 
   return createPortal(
     <>
@@ -69,7 +73,7 @@ export default function AnchorDropdownPanel({
         <button
           type="button"
           aria-label="Cerrar menú"
-          className="fixed inset-0 bg-black/40"
+          className="fixed inset-0 bg-black/40 touch-none"
           style={{ zIndex: zIndex - 1 }}
           onClick={onClose}
         />
@@ -77,9 +81,10 @@ export default function AnchorDropdownPanel({
       <div
         ref={panelRef}
         role="dialog"
+        aria-modal={panelLayout.isBottomSheet ? 'true' : undefined}
         aria-label={ariaLabel}
         style={anchorPanelStyle(panelLayout, zIndex)}
-        className={`overflow-y-auto overscroll-contain ${className}`}
+        className={`overflow-y-auto overscroll-contain touch-pan-y ${sheetClass} ${className}`}
       >
         {children}
       </div>
