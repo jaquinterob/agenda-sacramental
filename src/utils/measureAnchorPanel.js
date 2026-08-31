@@ -1,5 +1,6 @@
 const VIEWPORT_PADDING = 12
 const GAP = 8
+const BOTTOM_SHEET_BREAKPOINT = 1024
 
 function getViewport() {
   const visual = window.visualViewport
@@ -11,9 +12,27 @@ function getViewport() {
   }
 }
 
+function measureBottomSheet(viewport) {
+  const width = viewport.width - VIEWPORT_PADDING * 2
+  const maxHeight = Math.min(viewport.height * 0.75, viewport.height - 48)
+
+  return {
+    left: viewport.offsetLeft + VIEWPORT_PADDING,
+    width,
+    bottom: VIEWPORT_PADDING,
+    maxHeight: Math.max(120, maxHeight),
+    isBottomSheet: true,
+  }
+}
+
 export function measureAnchorPanel(anchor, preferredWidth, contentHeight = 160) {
-  const rect = anchor.getBoundingClientRect()
   const viewport = getViewport()
+
+  if (viewport.width < BOTTOM_SHEET_BREAKPOINT) {
+    return measureBottomSheet(viewport)
+  }
+
+  const rect = anchor.getBoundingClientRect()
   const panelWidth = Math.min(preferredWidth, viewport.width - VIEWPORT_PADDING * 2)
 
   let left = rect.right - panelWidth
@@ -33,6 +52,7 @@ export function measureAnchorPanel(anchor, preferredWidth, contentHeight = 160) 
       width: panelWidth,
       top: rect.bottom + GAP,
       maxHeight: Math.max(80, spaceBelow),
+      isBottomSheet: false,
     }
   }
 
@@ -41,6 +61,7 @@ export function measureAnchorPanel(anchor, preferredWidth, contentHeight = 160) 
     width: panelWidth,
     bottom: window.innerHeight - rect.top + GAP,
     maxHeight: Math.max(80, spaceAbove),
+    isBottomSheet: false,
   }
 }
 
@@ -53,8 +74,10 @@ export function anchorPanelStyle(panelLayout, zIndex = 100) {
     width: panelLayout.width,
     maxHeight: panelLayout.maxHeight,
     zIndex,
-    ...(panelLayout.top != null
-      ? { top: panelLayout.top }
-      : { bottom: panelLayout.bottom }),
+    ...(panelLayout.isBottomSheet
+      ? { bottom: panelLayout.bottom }
+      : panelLayout.top != null
+        ? { top: panelLayout.top }
+        : { bottom: panelLayout.bottom }),
   }
 }
