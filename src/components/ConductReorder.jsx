@@ -83,7 +83,7 @@ export function SpeakersPhaseContent({ items, programItems, onReorder, doneItems
               <div
                 data-pdf-block
                 {...(canReorder ? containerProps(index) : {})}
-                className={`flex items-stretch gap-1.5 md:gap-2 rounded-lg transition-all ${
+                className={`flex items-stretch gap-1.5 md:gap-2 rounded-lg pl-2.5 md:pl-3 transition-all ${
                   isDragging ? 'opacity-40' : isOver ? 'bg-slate-50 ring-1 ring-slate-300' : ''
                 } ${!exportMode && done ? 'opacity-45' : ''} ${!exportMode && current && !done ? 'bg-brand-700/[0.04]' : ''}`}
               >
@@ -277,7 +277,7 @@ export function TestimoniesPhaseContent({ item, witnesses, onChange, itemKey, se
 
   if (exportMode) {
     return (
-      <div ref={setItemRef?.(itemKey)} data-pdf-block className="scroll-mt-20 flex items-stretch gap-2 md:gap-3">
+      <div ref={setItemRef?.(itemKey)} data-pdf-block className="scroll-mt-20 flex items-stretch gap-2 md:gap-3 pl-2.5 md:pl-3">
         <ConductProgressRail time={item.time} exportMode />
         <div className="min-w-0 flex-1 pb-3 pl-3 md:pl-4 pt-2">
           <TypeLabel type="testimony" className="mb-1.5">
@@ -306,7 +306,7 @@ export function TestimoniesPhaseContent({ item, witnesses, onChange, itemKey, se
     return (
       <div
         ref={setItemRef?.(itemKey)}
-        className={`scroll-mt-20 flex items-stretch gap-2 md:gap-3 transition-opacity duration-300 ${
+        className={`scroll-mt-20 flex items-stretch gap-2 md:gap-3 pl-2.5 md:pl-3 transition-opacity duration-300 ${
           done ? 'opacity-45' : 'opacity-100'
         } ${current && !done ? 'rounded-lg bg-brand-700/[0.04]' : ''}`}
       >
@@ -345,7 +345,7 @@ export function TestimoniesPhaseContent({ item, witnesses, onChange, itemKey, se
   return (
     <div
       ref={setItemRef?.(itemKey)}
-      className={`scroll-mt-20 flex items-stretch gap-2 md:gap-3 transition-opacity duration-300 ${
+      className={`scroll-mt-20 flex items-stretch gap-2 md:gap-3 pl-2.5 md:pl-3 transition-opacity duration-300 ${
         done ? 'opacity-45' : 'opacity-100'
       } ${current && !done ? 'rounded-lg bg-brand-700/[0.04]' : ''}`}
     >

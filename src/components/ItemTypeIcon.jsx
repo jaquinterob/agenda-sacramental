@@ -76,24 +76,32 @@ export function TypeLabel({ type, children, className = '' }) {
 const labelRow = 'flex items-center gap-1.5'
 
 /** Etiqueta de campo en formulario */
-export function FormLabel({ type, htmlFor, children, className = '' }) {
+export function FormLabel({ type, htmlFor, children, className = '', required = false }) {
   const classNames = `${labelRow} text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5 ${className}`
+  const content = (
+    <>
+      {type && <ItemTypeIcon type={type} />}
+      <span>
+        {children}
+        {required ? (
+          <span className="ml-0.5 text-amber-600" aria-hidden="true">
+            *
+          </span>
+        ) : null}
+      </span>
+      {required ? <span className="sr-only">(obligatorio)</span> : null}
+    </>
+  )
 
   if (htmlFor) {
     return (
       <label htmlFor={htmlFor} className={classNames}>
-        {type && <ItemTypeIcon type={type} />}
-        <span>{children}</span>
+        {content}
       </label>
     )
   }
 
-  return (
-    <p className={classNames}>
-      {type && <ItemTypeIcon type={type} />}
-      <span>{children}</span>
-    </p>
-  )
+  return <p className={classNames}>{content}</p>
 }
 
 /** Encabezado de sección en formulario */

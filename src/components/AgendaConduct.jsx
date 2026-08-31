@@ -87,7 +87,7 @@ function TimelineRow({ time, children, done, current, onToggleDone, doneLabel, i
     <div
       ref={itemRef}
       {...(pdfBlock ? { 'data-pdf-block': '' } : {})}
-      className={`scroll-mt-20 flex items-stretch gap-2 md:gap-3 ${
+      className={`scroll-mt-20 flex items-stretch gap-2 md:gap-3 pl-2.5 md:pl-3 ${
         exportMode ? '' : `transition-opacity duration-300 ${done ? 'opacity-45' : 'opacity-100'} ${current && !done ? 'rounded-lg bg-brand-700/[0.04]' : ''}`
       }`}
     >

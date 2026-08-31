@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CaretRight, ProjectorScreen } from '@phosphor-icons/react'
 import HymnSelector from './HymnSelector'
 import FormOptionsMenu from './FormOptionsMenu'
@@ -62,7 +62,20 @@ export default function AgendaForm({
   const isSacrament = form.meetingType === 'sacrament'
   const steps = getMeetingSteps(form.meetingType)
   const currentStep = steps[stepIndex]
-  const stepAlerts = useMemo(() => getStepAlerts(form, form.meetingType), [form])
+  const [attemptedSteps, setAttemptedSteps] = useState(() => new Set())
+  const stepAlerts = useMemo(
+    () => getStepAlerts(form, form.meetingType, attemptedSteps),
+    [form, attemptedSteps],
+  )
+
+  const markStepAttempted = (stepId) => {
+    setAttemptedSteps((prev) => {
+      if (prev.has(stepId)) return prev
+      const next = new Set(prev)
+      next.add(stepId)
+      return next
+    })
+  }
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -87,17 +100,22 @@ export default function AgendaForm({
       witnesses: [],
       programItems: type === 'sacrament' ? defaultProgramItems() : prev.programItems,
     }))
+    setAttemptedSteps(new Set())
     setStepIndex(0)
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    markStepAttempted(currentStep.id)
     onOpenPresentation()
   }
 
   const openPresentation = () => onOpenPresentation()
 
-  const goNext = () => setStepIndex((i) => Math.min(i + 1, steps.length - 1))
+  const goNext = () => {
+    markStepAttempted(currentStep.id)
+    setStepIndex((i) => Math.min(i + 1, steps.length - 1))
+  }
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
   useEffect(() => {
@@ -138,7 +156,7 @@ export default function AgendaForm({
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Datos de la reunión</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <FormLabel type="date" htmlFor="date">
+                  <FormLabel type="date" htmlFor="date" required>
                     Fecha
                   </FormLabel>
                   <input
@@ -151,7 +169,7 @@ export default function AgendaForm({
                   />
                 </div>
                 <div>
-                  <FormLabel type="wardBusiness" htmlFor="ward">
+                  <FormLabel type="wardBusiness" htmlFor="ward" required>
                     Barrio
                   </FormLabel>
                   <NameInput
@@ -162,7 +180,7 @@ export default function AgendaForm({
                   />
                 </div>
                 <div>
-                  <FormLabel type="location" htmlFor="location">
+                  <FormLabel type="location" htmlFor="location" required>
                     Lugar
                   </FormLabel>
                   <NameInput
@@ -173,7 +191,7 @@ export default function AgendaForm({
                   />
                 </div>
                 <div>
-                  <FormLabel type="time" htmlFor="time">
+                  <FormLabel type="time" htmlFor="time" required>
                     Hora de inicio
                   </FormLabel>
                   <input
@@ -185,7 +203,9 @@ export default function AgendaForm({
                   />
                 </div>
                 <div>
-                  <FormLabel htmlFor="presides">Preside</FormLabel>
+                  <FormLabel htmlFor="presides" required>
+                    Preside
+                  </FormLabel>
                   <NameInput
                     id="presides"
                     value={form.presides}
@@ -194,7 +214,9 @@ export default function AgendaForm({
                   />
                 </div>
                 <div>
-                  <FormLabel htmlFor="presidesTitle">Llamamiento</FormLabel>
+                  <FormLabel htmlFor="presidesTitle" required>
+                    Llamamiento
+                  </FormLabel>
                   <SelectField
                     id="presidesTitle"
                     value={form.presidesTitle}
@@ -210,7 +232,9 @@ export default function AgendaForm({
                 </div>
                 {form.presidesTitle === 'other' && (
                   <div className="md:col-span-2">
-                    <FormLabel htmlFor="presidesTitleOther">Especificar llamamiento</FormLabel>
+                    <FormLabel htmlFor="presidesTitleOther" required>
+                      Especificar llamamiento
+                    </FormLabel>
                     <NameInput
                       id="presidesTitleOther"
                       value={form.presidesTitleOther}
@@ -221,7 +245,9 @@ export default function AgendaForm({
                   </div>
                 )}
                 <div>
-                  <FormLabel htmlFor="conducts">Dirige</FormLabel>
+                  <FormLabel htmlFor="conducts" required>
+                    Dirige
+                  </FormLabel>
                   <NameInput
                     id="conducts"
                     value={form.conducts}
@@ -238,7 +264,7 @@ export default function AgendaForm({
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <FormLabel type="musicDirector" htmlFor="musicDirector">
+              <FormLabel type="musicDirector" htmlFor="musicDirector" required>
                 Director de música
               </FormLabel>
               <NameInput
@@ -329,9 +355,10 @@ export default function AgendaForm({
                 hymns={hymns}
                 value={form.openingHymn}
                 onChange={(n) => update('openingHymn', n)}
+                required
               />
               <div>
-                <FormLabel type="prayer" htmlFor="openingPrayer">
+                <FormLabel type="prayer" htmlFor="openingPrayer" required>
                   Primera oración
                 </FormLabel>
                 <NameInput
@@ -385,12 +412,16 @@ export default function AgendaForm({
             value={form.sacramentHymn}
             onChange={(n) => update('sacramentHymn', n)}
             sacramentOnly
+            required
           />
         )
 
       case 'speakers':
         return (
           <div>
+            <p className="mb-3 text-xs font-medium text-slate-600">
+              Obligatorio<span className="text-amber-600">*</span>: mínimo 2 discursantes con nombre y un himno intermedio.
+            </p>
             <ProgramItemsEditor
               items={form.programItems}
               hymns={hymns}
@@ -407,7 +438,7 @@ export default function AgendaForm({
         return (
           <div className="space-y-6">
             <div>
-              <FormLabel type="prayer" htmlFor="closingPrayer">
+              <FormLabel type="prayer" htmlFor="closingPrayer" required>
                 Última oración
               </FormLabel>
               <NameInput
@@ -422,6 +453,7 @@ export default function AgendaForm({
               hymns={hymns}
               value={form.closingHymn}
               onChange={(n) => update('closingHymn', n)}
+              required
             />
           </div>
         )

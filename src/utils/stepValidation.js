@@ -56,7 +56,10 @@ export function getStepValidationIssues(form, stepId) {
   return issues
 }
 
-export function getStepAlerts(form, meetingType = form.meetingType) {
+export function getStepAlerts(form, meetingType = form.meetingType, attemptedStepIds = null) {
   const steps = getMeetingSteps(meetingType)
-  return steps.map((step) => getStepValidationIssues(form, step.id).length > 0)
+  return steps.map((step) => {
+    if (attemptedStepIds && !attemptedStepIds.has(step.id)) return false
+    return getStepValidationIssues(form, step.id).length > 0
+  })
 }

@@ -75,6 +75,7 @@ export default function HymnSelector({
   value,
   onChange,
   sacramentOnly = false,
+  required = false,
 }) {
   const listboxId = useId()
   const [query, setQuery] = useState('')
@@ -262,7 +263,11 @@ export default function HymnSelector({
 
   return (
     <div ref={containerRef} className="relative">
-      {label ? <FormLabel type={iconType}>{label}</FormLabel> : null}
+      {label ? (
+        <FormLabel type={iconType} required={required}>
+          {label}
+        </FormLabel>
+      ) : null}
 
       <div className="relative mt-0">
         <input
