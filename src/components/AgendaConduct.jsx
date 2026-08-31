@@ -167,6 +167,64 @@ function HymnLine({ label, hymn }) {
   )
 }
 
+function ConductClosingFields({ attendance, notes, onAttendanceChange, onNotesChange, readOnly, exportMode }) {
+  const attendanceValue = String(attendance ?? '').trim()
+  const notesValue = String(notes ?? '').trim()
+  const locked = readOnly || exportMode
+
+  if (locked && !attendanceValue && !notesValue) return null
+
+  return (
+    <div data-pdf-block className="px-5 py-5 md:px-8 border-t border-slate-100 space-y-5">
+      {(locked ? attendanceValue : true) && (
+        <div>
+          <TypeLabel type="attendance">Asistencia</TypeLabel>
+          {locked ? (
+            <p className="mt-1 text-sm font-medium text-slate-800 tabular-nums">
+              {attendanceValue} {Number(attendanceValue) === 1 ? 'persona' : 'personas'}
+            </p>
+          ) : (
+            <div className="mt-1.5 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="numeric"
+                min="0"
+                step="1"
+                value={attendance}
+                onChange={(e) => onAttendanceChange(e.target.value)}
+                placeholder="0"
+                aria-label="Asistencia de la reunión"
+                className="w-28 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium tabular-nums text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-brand-700 focus:ring-0"
+              />
+              <span className="text-sm text-slate-500">personas</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(locked ? notesValue : true) && (
+        <div>
+          <TypeLabel type="notes">Notas</TypeLabel>
+          {locked ? (
+            <p className="mt-1 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+              {notesValue}
+            </p>
+          ) : (
+            <textarea
+              value={notes}
+              onChange={(e) => onNotesChange(e.target.value)}
+              rows={4}
+              placeholder="Observaciones de la reunión…"
+              aria-label="Notas de la reunión"
+              className="mt-1.5 w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-300 leading-relaxed focus:outline-none focus:border-brand-700 focus:ring-0 min-h-[6rem]"
+            />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ScheduleItem({ item, visitors, onVisitorsChange, done, current, onToggleDone, doneLabel, itemRef, progress, exportMode, readOnly }) {
   const rowProps = {
     done,
@@ -459,6 +517,8 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
   const [programItems, setProgramItems] = useState(() => normalizeProgramItems(agenda))
   const [witnesses, setWitnesses] = useState(() => normalizeWitnesses(agenda))
   const [visitors, setVisitors] = useState(() => normalizeVisitors(agenda))
+  const [attendance, setAttendance] = useState(() => agenda.attendance ?? '')
+  const [notes, setNotes] = useState(() => agenda.notes ?? '')
   const [doneItems, setDoneItems] = useState(() => new Set())
   const [capturing, setCapturing] = useState(false)
   const [shareError, setShareError] = useState('')
@@ -489,12 +549,14 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
     setProgramItems(normalizeProgramItems(agenda))
     setWitnesses(normalizeWitnesses(agenda))
     setVisitors(normalizeVisitors(agenda))
+    setAttendance(agenda.attendance ?? '')
+    setNotes(agenda.notes ?? '')
     setDoneItems(new Set())
   }, [agenda])
 
   const liveAgenda = useMemo(
-    () => ({ ...agenda, programItems, witnesses, visitors }),
-    [agenda, programItems, witnesses, visitors],
+    () => ({ ...agenda, programItems, witnesses, visitors, attendance, notes }),
+    [agenda, programItems, witnesses, visitors, attendance, notes],
   )
 
   const isSacrament = liveAgenda.meetingType === 'sacrament'
@@ -738,6 +800,15 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
               <ConductPhase key={phase.id} phase={phase} {...phaseProps} />
             ))}
           </div>
+
+          <ConductClosingFields
+            attendance={attendance}
+            notes={notes}
+            onAttendanceChange={setAttendance}
+            onNotesChange={setNotes}
+            readOnly={readOnly}
+            exportMode={capturing}
+          />
 
           {isSacrament && (
             <div

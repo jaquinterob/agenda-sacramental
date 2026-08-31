@@ -28,5 +28,7 @@ export function createInitialAgenda() {
     visitors: [],
     closingPrayer: '',
     closingHymn: null,
+    attendance: '',
+    notes: '',
   }
 }

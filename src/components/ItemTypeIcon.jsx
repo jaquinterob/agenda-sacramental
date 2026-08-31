@@ -17,8 +17,10 @@ import {
   MusicNote,
   MusicNotes,
   TextT,
+  NotePencil,
   PianoKeys,
   UsersThree,
+  Users,
 } from '@phosphor-icons/react'
 
 const ICON_SIZE = 16
@@ -46,6 +48,8 @@ const ICONS = {
   musicDirector: { label: 'Dirección de la música', Icon: MusicNote },
   pianist: { label: 'Pianista', Icon: PianoKeys },
   musicAssistant: { label: 'Asistente musical', Icon: Disc },
+  attendance: { label: 'Asistencia', Icon: Users },
+  notes: { label: 'Notas', Icon: NotePencil },
 }
 
 export function ItemTypeIcon({ type, className = '' }) {
