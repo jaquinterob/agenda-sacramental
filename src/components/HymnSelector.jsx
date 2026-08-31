@@ -1,16 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { hymnUrl } from '../utils/hymnUrl'
-
-function ExternalLinkIcon({ className = 'w-3.5 h-3.5' }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-    </svg>
-  )
-}
+import { FormLabel } from './ItemTypeIcon'
 
 export default function HymnSelector({
   label,
+  iconType = 'hymn',
   hymns = [],
   value,
   onChange,
@@ -121,9 +114,7 @@ export default function HymnSelector({
 
   return (
     <div ref={containerRef}>
-      <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-        {label}
-      </label>
+      {label ? <FormLabel type={iconType}>{label}</FormLabel> : null}
 
       <div className="relative">
         <div
@@ -139,16 +130,6 @@ export default function HymnSelector({
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="text-gray-500 font-mono text-sm shrink-0">{selected.number}</span>
               <span className="truncate text-gray-900 text-sm">{selected.title}</span>
-              <a
-                href={hymnUrl(selected.number)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-gray-400 hover:text-slate-700 transition-colors"
-                title="Ver himno en churchofjesuschrist.org"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExternalLinkIcon />
-              </a>
               <button
                 type="button"
                 onClick={clearSelection}
@@ -221,16 +202,6 @@ export default function HymnSelector({
                   >
                     <span className="text-gray-400 font-mono w-10 text-right shrink-0">{hymn.number}</span>
                     <span className="text-gray-900 truncate flex-1">{hymn.title}</span>
-                    <a
-                      href={hymnUrl(hymn.number)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 text-gray-300 hover:text-slate-600 transition-colors"
-                      title="Ver himno en churchofjesuschrist.org"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLinkIcon className="w-3 h-3" />
-                    </a>
                   </li>
                 ))
               )}

@@ -1,37 +1,24 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
+import { CaretRight, ProjectorScreen } from '@phosphor-icons/react'
 import HymnSelector from './HymnSelector'
+import { ProgramItemsEditor } from './DraggableList'
+import { StepHeader, StepNav, StepProgress } from './StepWizard'
+import { estimateSacramentMinutes, MEETING_TOTAL_MINUTES } from '../utils/buildConductSchedule'
+import { getMeetingSteps } from '../utils/meetingSteps'
+import { defaultProgramItems } from '../utils/programItems'
+import { WardBusinessList } from './WardBusinessEditor'
+import { VisitorsEditor } from './VisitorsEditor'
+import { FormLabel, SectionLabel } from './ItemTypeIcon'
+import ChurchLogo from './ChurchLogo'
+import NameInput from './NameInput'
+import SelectField from './SelectField'
+import SlidingToggle from './SlidingToggle'
+import { PRESIDES_TITLE_OPTIONS } from '../utils/presidesTitle'
 
-const emptyTestimonies = () => Array.from({ length: 10 }, () => '')
+const inputClass =
+  'w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-700/10 focus:border-brand-700 transition'
 
-const initialForm = () => ({
-  date: new Date().toISOString().split('T')[0],
-  ward: 'Sabaneta',
-  meetingType: 'sacrament',
-  presides: '',
-  conducts: '',
-  musicDirector: '',
-  pianist: '',
-  musicAssistant: '',
-  announcements: [''],
-  openingHymn: null,
-  openingPrayer: '',
-  wardBusiness: [''],
-  stakeBusiness: [''],
-  sacramentHymn: null,
-  speakers: [{ name: '', topic: '' }],
-  testimonies: emptyTestimonies(),
-  closingPrayer: '',
-  closingHymn: null,
-})
-
-function Section({ title, children }) {
-  return (
-    <section className="mb-8 pb-8 border-b border-gray-200 last:border-b-0">
-      <h2 className="text-sm font-bold uppercase tracking-wider text-slate-800 mb-4">{title}</h2>
-      {children}
-    </section>
-  )
-}
+const textareaClass = `${inputClass} resize-y min-h-[5rem] leading-relaxed`
 
 function DynamicList({ items, onChange, onAdd, onRemove, renderItem, addLabel }) {
   return (
@@ -61,12 +48,17 @@ function DynamicList({ items, onChange, onAdd, onRemove, renderItem, addLabel })
   )
 }
 
-const inputClass =
-  'w-full px-3 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-800/10 focus:border-slate-800 transition'
-
-export default function AgendaForm({ hymns, onGenerate }) {
-  const [form, setForm] = useState(initialForm)
+export default function AgendaForm({
+  hymns,
+  form,
+  setForm,
+  stepIndex,
+  setStepIndex,
+  onOpenPresentation,
+}) {
   const isSacrament = form.meetingType === 'sacrament'
+  const steps = getMeetingSteps(form.meetingType)
+  const currentStep = steps[stepIndex]
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -84,370 +76,404 @@ export default function AgendaForm({ hymns, onGenerate }) {
     setForm((prev) => ({ ...prev, [key]: prev[key].filter((_, i) => i !== index) }))
   }
 
-  const updateSpeaker = (index, field, value) => {
-    setForm((prev) => {
-      const speakers = [...prev.speakers]
-      speakers[index] = { ...speakers[index], [field]: value }
-      return { ...prev, speakers }
-    })
-  }
-
-  const addSpeaker = () => {
-    setForm((prev) => ({ ...prev, speakers: [...prev.speakers, { name: '', topic: '' }] }))
-  }
-
-  const removeSpeaker = (index) => {
-    setForm((prev) => ({ ...prev, speakers: prev.speakers.filter((_, i) => i !== index) }))
-  }
-
   const setMeetingType = (type) => {
     setForm((prev) => ({
       ...prev,
       meetingType: type,
-      testimonies: type === 'testimony' ? emptyTestimonies() : prev.testimonies,
+      witnesses: [],
+      programItems: type === 'sacrament' ? defaultProgramItems() : prev.programItems,
     }))
+    setStepIndex(0)
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onGenerate(form)
+    onOpenPresentation()
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-      <header className="text-center mb-8 pb-6 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-slate-900 tracking-wide">Agenda Sacramental</h1>
-        <p className="text-sm text-gray-500 mt-1">Generador de programa de reunión</p>
-      </header>
+  const openPresentation = () => onOpenPresentation()
 
-      {/* 1. Tipo de reunión */}
-      <Section title="Tipo de reunión">
-        <div className="flex rounded-xl overflow-hidden border-2 border-slate-200">
-          <button
-            type="button"
-            onClick={() => setMeetingType('sacrament')}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              isSacrament ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 hover:bg-gray-50'
-            }`}
-          >
-            Reunión Sacramental
-          </button>
-          <button
-            type="button"
-            onClick={() => setMeetingType('testimony')}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              !isSacrament ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 hover:bg-gray-50'
-            }`}
-          >
-            Ayuno y Testimonio
-          </button>
-        </div>
-      </Section>
+  const goNext = () => setStepIndex((i) => Math.min(i + 1, steps.length - 1))
+  const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
-      {/* 2. Fecha y barrio */}
-      <Section title="Fecha y barrio">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="date" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Fecha
-            </label>
-            <input
-              type="date"
-              id="date"
-              value={form.date}
-              onChange={(e) => update('date', e.target.value)}
-              className={inputClass}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="ward" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Barrio
-            </label>
-            <input
-              type="text"
-              id="ward"
-              value={form.ward}
-              onChange={(e) => update('ward', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
-      </Section>
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [stepIndex])
 
-      {/* 3. Quién preside / dirige */}
-      <Section title="Quién preside / Quién dirige">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="presides" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Quién preside
-            </label>
-            <input
-              type="text"
-              id="presides"
-              value={form.presides}
-              onChange={(e) => update('presides', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label htmlFor="conducts" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Quién dirige
-            </label>
-            <input
-              type="text"
-              id="conducts"
-              value={form.conducts}
-              onChange={(e) => update('conducts', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
-      </Section>
+  const renderStepContent = () => {
+    switch (currentStep.id) {
+      case 'setup':
+        return (
+          <div className="space-y-8">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Tipo de reunión</p>
+              <SlidingToggle
+                value={form.meetingType}
+                onChange={setMeetingType}
+                fullWidth
+                size="md"
+                ariaLabel="Tipo de reunión"
+                options={[
+                  {
+                    value: 'sacrament',
+                    label: 'Reunión Sacramental',
+                    activeTextClass: 'text-white',
+                    pillClass: 'bg-brand-700 ring-brand-700',
+                  },
+                  {
+                    value: 'testimony',
+                    label: 'Ayuno y Testimonio',
+                    activeTextClass: 'text-white',
+                    pillClass: 'bg-brand-700 ring-brand-700',
+                  },
+                ]}
+              />
+            </div>
 
-      {/* 4. Música */}
-      <Section title="Director de música / Pianista / Asistente musical">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="musicDirector" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Director de música
-            </label>
-            <input
-              type="text"
-              id="musicDirector"
-              value={form.musicDirector}
-              onChange={(e) => update('musicDirector', e.target.value)}
-              className={inputClass}
-            />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Datos de la reunión</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <FormLabel type="date" htmlFor="date">
+                    Fecha
+                  </FormLabel>
+                  <input
+                    type="date"
+                    id="date"
+                    value={form.date}
+                    onChange={(e) => update('date', e.target.value)}
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <FormLabel type="wardBusiness" htmlFor="ward">
+                    Barrio
+                  </FormLabel>
+                  <NameInput
+                    id="ward"
+                    value={form.ward}
+                    onChange={(e) => update('ward', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <FormLabel type="location" htmlFor="location">
+                    Lugar
+                  </FormLabel>
+                  <NameInput
+                    id="location"
+                    value={form.location}
+                    onChange={(e) => update('location', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <FormLabel type="time" htmlFor="time">
+                    Hora de inicio
+                  </FormLabel>
+                  <input
+                    type="time"
+                    id="time"
+                    value={form.time}
+                    onChange={(e) => update('time', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <FormLabel htmlFor="presides">Preside</FormLabel>
+                  <NameInput
+                    id="presides"
+                    value={form.presides}
+                    onChange={(e) => update('presides', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <FormLabel htmlFor="presidesTitle">Llamamiento</FormLabel>
+                  <SelectField
+                    id="presidesTitle"
+                    value={form.presidesTitle}
+                    onChange={(value) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        presidesTitle: value,
+                        presidesTitleOther: value === 'other' ? prev.presidesTitleOther : '',
+                      }))
+                    }}
+                    options={PRESIDES_TITLE_OPTIONS}
+                  />
+                </div>
+                {form.presidesTitle === 'other' && (
+                  <div className="md:col-span-2">
+                    <FormLabel htmlFor="presidesTitleOther">Especificar llamamiento</FormLabel>
+                    <NameInput
+                      id="presidesTitleOther"
+                      value={form.presidesTitleOther}
+                      onChange={(e) => update('presidesTitleOther', e.target.value)}
+                      placeholder="Presidente de …"
+                      className={inputClass}
+                    />
+                  </div>
+                )}
+                <div>
+                  <FormLabel htmlFor="conducts">Dirige</FormLabel>
+                  <NameInput
+                    id="conducts"
+                    value={form.conducts}
+                    onChange={(e) => update('conducts', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label htmlFor="pianist" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Pianista
-            </label>
-            <input
-              type="text"
-              id="pianist"
-              value={form.pianist}
-              onChange={(e) => update('pianist', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label htmlFor="musicAssistant" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Asistente musical
-            </label>
-            <input
-              type="text"
-              id="musicAssistant"
-              value={form.musicAssistant}
-              onChange={(e) => update('musicAssistant', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
-      </Section>
+        )
 
-      {/* 5. Anuncios */}
-      <Section title="Anuncios">
-        <DynamicList
-          items={form.announcements}
-          onAdd={() => addListItem('announcements')}
-          onRemove={(i) => removeListItem('announcements', i)}
-          addLabel="Agregar anuncio"
-          renderItem={(item, i) => (
-            <input
-              type="text"
-              value={item}
-              onChange={(e) => updateListItem('announcements', i, e.target.value)}
-              className={`${inputClass} flex-1`}
-            />
-          )}
-        />
-      </Section>
-
-      {/* 6. Himno de apertura / Primera oración */}
-      <Section title="Himno de apertura / Primera oración">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <HymnSelector
-            label="Himno de apertura"
-            hymns={hymns}
-            value={form.openingHymn}
-            onChange={(n) => update('openingHymn', n)}
-          />
-          <div>
-            <label htmlFor="openingPrayer" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Primera oración
-            </label>
-            <input
-              type="text"
-              id="openingPrayer"
-              value={form.openingPrayer}
-              onChange={(e) => update('openingPrayer', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
-      </Section>
-
-      {/* 7. Asuntos */}
-      <Section title="Asuntos del barrio / Asuntos de la estaca">
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Asuntos del barrio</h3>
-            <DynamicList
-              items={form.wardBusiness}
-              onAdd={() => addListItem('wardBusiness')}
-              onRemove={(i) => removeListItem('wardBusiness', i)}
-              addLabel="Agregar asunto"
-              renderItem={(item, i) => (
-                <input
-                  type="text"
-                  value={item}
-                  onChange={(e) => updateListItem('wardBusiness', i, e.target.value)}
-                  className={`${inputClass} flex-1`}
+      case 'music':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FormLabel type="musicDirector" htmlFor="musicDirector">
+                Director de música
+              </FormLabel>
+              <NameInput
+                id="musicDirector"
+                value={form.musicDirector}
+                onChange={(e) => update('musicDirector', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <FormLabel type="pianist" htmlFor="pianist">
+                Pianista
+              </FormLabel>
+              <NameInput
+                id="pianist"
+                value={form.pianist}
+                onChange={(e) => update('pianist', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <FormLabel type="musicAssistant" htmlFor="musicAssistant">
+                Asistente musical
+              </FormLabel>
+              <NameInput
+                id="musicAssistant"
+                value={form.musicAssistant}
+                onChange={(e) => update('musicAssistant', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <HymnSelector
+                label="Preludio (opcional)"
+                hymns={hymns}
+                value={form.preludeHymn}
+                onChange={(n) => update('preludeHymn', n)}
+              />
+            </div>
+            {form.preludeHymn && (
+              <div className="md:col-span-2">
+                <FormLabel type="pianist" htmlFor="preludePianist">
+                  Pianista del preludio (opcional)
+                </FormLabel>
+                <NameInput
+                  id="preludePianist"
+                  value={form.preludePianist}
+                  onChange={(e) => update('preludePianist', e.target.value)}
+                  placeholder={form.pianist || 'Nombre del pianista'}
+                  className={inputClass}
                 />
-              )}
-            />
+                <p className="text-xs text-slate-500 mt-1">
+                  Si lo dejas vacío, se muestra el pianista de la reunión.
+                </p>
+              </div>
+            )}
           </div>
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Asuntos de la estaca</h3>
-            <DynamicList
-              items={form.stakeBusiness}
-              onAdd={() => addListItem('stakeBusiness')}
-              onRemove={(i) => removeListItem('stakeBusiness', i)}
-              addLabel="Agregar asunto"
-              renderItem={(item, i) => (
-                <input
-                  type="text"
-                  value={item}
-                  onChange={(e) => updateListItem('stakeBusiness', i, e.target.value)}
-                  className={`${inputClass} flex-1`}
-                />
-              )}
-            />
-          </div>
-        </div>
-      </Section>
+        )
 
-      {/* 8. Himno sacramental */}
-      {isSacrament && (
-        <Section title="Himno sacramental">
+      case 'opening':
+        return (
+          <div className="space-y-6">
+            <div>
+              <SectionLabel type="announcements">Anuncios</SectionLabel>
+              <DynamicList
+                items={form.announcements}
+                onAdd={() => addListItem('announcements')}
+                onRemove={(i) => removeListItem('announcements', i)}
+                addLabel="Agregar anuncio"
+                renderItem={(item, i) => (
+                  <textarea
+                    rows={3}
+                    value={item}
+                    onChange={(e) => updateListItem('announcements', i, e.target.value)}
+                    placeholder="Describe el anuncio…"
+                    className={`${textareaClass} flex-1`}
+                  />
+                )}
+              />
+            </div>
+            <VisitorsEditor
+              items={form.visitors || []}
+              onChange={(visitors) => update('visitors', visitors)}
+            />
+            <div className="space-y-6">
+              <HymnSelector
+                label="Himno de apertura"
+                hymns={hymns}
+                value={form.openingHymn}
+                onChange={(n) => update('openingHymn', n)}
+              />
+              <div>
+                <FormLabel type="prayer" htmlFor="openingPrayer">
+                  Primera oración
+                </FormLabel>
+                <NameInput
+                  id="openingPrayer"
+                  value={form.openingPrayer}
+                  onChange={(e) => update('openingPrayer', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'business':
+        return (
+          <div className="space-y-6">
+            <div>
+              <SectionLabel type="wardBusiness">Asuntos del barrio</SectionLabel>
+              <WardBusinessList
+                items={form.wardBusiness}
+                onChange={(wardBusiness) => update('wardBusiness', wardBusiness)}
+              />
+            </div>
+            <div>
+              <SectionLabel type="stakeBusiness">Asuntos de la estaca</SectionLabel>
+              <DynamicList
+                items={form.stakeBusiness}
+                onAdd={() => addListItem('stakeBusiness')}
+                onRemove={(i) => removeListItem('stakeBusiness', i)}
+                addLabel="Agregar asunto"
+                renderItem={(item, i) => (
+                  <textarea
+                    rows={3}
+                    value={item}
+                    onChange={(e) => updateListItem('stakeBusiness', i, e.target.value)}
+                    placeholder="Describe el asunto de la estaca…"
+                    className={`${textareaClass} flex-1`}
+                  />
+                )}
+              />
+            </div>
+          </div>
+        )
+
+      case 'sacrament':
+        return (
           <HymnSelector
             label="Himno de la Santa Cena"
+            iconType="sacrament"
             hymns={hymns}
             value={form.sacramentHymn}
             onChange={(n) => update('sacramentHymn', n)}
             sacramentOnly
           />
-        </Section>
-      )}
+        )
 
-      {/* 9. Discursantes o testimonios */}
-      {isSacrament ? (
-        <Section title="Discursantes">
-          <div className="space-y-2">
-            {form.speakers.map((speaker, i) => (
-              <div key={i} className="flex gap-2 items-start">
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      value={speaker.name}
-                      onChange={(e) => updateSpeaker(i, 'name', e.target.value)}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-                      Tema (opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={speaker.topic}
-                      onChange={(e) => updateSpeaker(i, 'topic', e.target.value)}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeSpeaker(i)}
-                  className="mt-8 text-gray-400 hover:text-red-500 text-lg leading-none shrink-0"
-                  title="Eliminar"
-                  aria-label="Eliminar"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addSpeaker}
-              className="text-sm font-medium text-slate-700 hover:text-slate-900"
-            >
-              + Agregar discursante
-            </button>
-          </div>
-        </Section>
-      ) : (
-        <Section title="Testimonios">
-          <DynamicList
-            items={form.testimonies}
-            onAdd={() => addListItem('testimonies')}
-            onRemove={(i) => removeListItem('testimonies', i)}
-            addLabel="Agregar testigo"
-            renderItem={(item, i) => (
-              <div className="flex-1">
-                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-                  Testigo {i + 1}
-                </label>
-                <input
-                  type="text"
-                  value={item}
-                  onChange={(e) => updateListItem('testimonies', i, e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            )}
-          />
-        </Section>
-      )}
-
-      {/* 10. Cierre */}
-      <Section title="Última oración / Himno de cierre">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      case 'speakers':
+        return (
           <div>
-            <label htmlFor="closingPrayer" className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
-              Última oración
-            </label>
-            <input
-              type="text"
-              id="closingPrayer"
-              value={form.closingPrayer}
-              onChange={(e) => update('closingPrayer', e.target.value)}
-              className={inputClass}
+            <ProgramItemsEditor
+              items={form.programItems}
+              hymns={hymns}
+              onChange={(programItems) => update('programItems', programItems)}
+            />
+            <p className={`text-xs mt-4 font-medium ${estimateSacramentMinutes(form) > MEETING_TOTAL_MINUTES ? 'text-red-600' : 'text-slate-500'}`}>
+              Duración estimada: {estimateSacramentMinutes(form)} / {MEETING_TOTAL_MINUTES} min
+              {estimateSacramentMinutes(form) > MEETING_TOTAL_MINUTES && ' — ajusta el programa para no pasarte del tiempo'}
+            </p>
+          </div>
+        )
+
+      case 'closing':
+        return (
+          <div className="space-y-6">
+            <div>
+              <FormLabel type="prayer" htmlFor="closingPrayer">
+                Última oración
+              </FormLabel>
+              <NameInput
+                id="closingPrayer"
+                value={form.closingPrayer}
+                onChange={(e) => update('closingPrayer', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <HymnSelector
+              label="Himno de cierre"
+              hymns={hymns}
+              value={form.closingHymn}
+              onChange={(n) => update('closingHymn', n)}
             />
           </div>
-          <HymnSelector
-            label="Himno de cierre"
-            hymns={hymns}
-            value={form.closingHymn}
-            onChange={(n) => update('closingHymn', n)}
-          />
-        </div>
-      </Section>
+        )
 
-      <div className="sticky bottom-0 pt-4 pb-2 bg-white">
-        <button
-          type="submit"
-          className="w-full py-3.5 text-sm font-bold uppercase tracking-wider rounded-xl bg-slate-800 text-white hover:bg-slate-900 transition-colors"
-        >
-          Ver programa de reunión
-        </button>
+      default:
+        return null
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto pb-24">
+      <div className="bg-white rounded-2xl p-6 md:p-8">
+        <header className="flex flex-col gap-4 mb-6 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <ChurchLogo size="md" className="shrink-0" />
+          <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 tracking-wide leading-tight">Agenda Sacramental</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Generador de programa de reunión</p>
+          </div>
+        </div>
+        <div className="flex shrink-0 justify-end">
+          <button
+            type="button"
+            onClick={openPresentation}
+            className="group inline-flex max-w-full items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-2.5 py-2 text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all hover:border-brand-700/20 hover:shadow-[0_10px_28px_rgba(49,90,154,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/20 active:scale-[0.99] sm:gap-3 sm:px-3"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-700/[0.08] text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white">
+              <ProjectorScreen className="h-[18px] w-[18px]" weight="duotone" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold leading-tight text-slate-900">Presentación</span>
+              <span className="hidden text-[11px] leading-tight text-slate-500 sm:block">Vista para dirigir</span>
+            </span>
+            <CaretRight
+              className="hidden h-3.5 w-3.5 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-brand-700 sm:block"
+              weight="bold"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </header>
+
+      <StepProgress steps={steps} currentIndex={stepIndex} onStepSelect={setStepIndex} />
+
+      <div key={currentStep.id} className="step-fade">
+        <StepHeader step={currentStep} />
+        <div>{renderStepContent()}</div>
       </div>
+      </div>
+
+      <StepNav
+        isFirst={stepIndex === 0}
+        isLast={stepIndex === steps.length - 1}
+        onPrev={goPrev}
+        onNext={goNext}
+      />
     </form>
   )
 }

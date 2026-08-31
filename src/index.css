@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-700: #315a9a;
+  --color-brand-800: #294a80;
+  --color-brand-900: #213c67;
+  --color-icon: #315a9a;
+  --color-icon-muted: #7a96c4;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
@@ -9,3 +17,202 @@ body {
 #root {
   min-height: 100svh;
 }
+
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-fade {
+  animation: step-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-fade {
+    animation: none;
+  }
+}
+
+.pdf-capture {
+  width: 768px !important;
+  max-width: 768px !important;
+}
+
+/* —— Presentación: temas —— */
+.conduct-theme-root {
+  --conduct-bg: #f1f5f9;
+  --conduct-surface: #ffffff;
+  --conduct-meta-bg: rgb(248 250 252 / 0.8);
+  --conduct-footer-bg: #f8fafc;
+  --conduct-text-strong: #0f172a;
+  --conduct-text: #1e293b;
+  --conduct-text-muted: #64748b;
+  --conduct-text-faint: #94a3b8;
+  --conduct-border: #e2e8f0;
+  --conduct-border-subtle: #f1f5f9;
+  --conduct-accent: #315a9a;
+  --conduct-accent-strong: #294a80;
+  --conduct-accent-soft: rgb(49 90 154 / 0.04);
+  --conduct-icon: #315a9a;
+  --conduct-icon-muted: #7a96c4;
+  --conduct-progress-active: #315a9a;
+  --conduct-progress-track: #f1f5f9;
+  --conduct-progress-pending: #e2e8f0;
+  --conduct-phase: #294a80;
+  --conduct-stand-cue: #294a80;
+  --conduct-stand-cue-border: rgb(49 90 154 / 0.35);
+  background-color: var(--conduct-bg);
+  color: var(--conduct-text);
+}
+
+.conduct-theme-root[data-conduct-theme='sepia'] {
+  --conduct-bg: #ebe6dc;
+  --conduct-surface: #faf7f0;
+  --conduct-meta-bg: rgb(245 241 232 / 0.92);
+  --conduct-footer-bg: #f3efe6;
+}
+
+.conduct-theme-root .conduct-surface {
+  background-color: var(--conduct-surface);
+}
+
+.conduct-theme-root .conduct-meta {
+  background-color: var(--conduct-meta-bg);
+}
+
+.conduct-theme-root .conduct-footer {
+  background-color: var(--conduct-footer-bg);
+}
+
+.conduct-theme-root .text-slate-900,
+.conduct-theme-root .text-slate-800 {
+  color: var(--conduct-text-strong);
+}
+
+.conduct-theme-root .text-slate-700,
+.conduct-theme-root .text-slate-600 {
+  color: var(--conduct-text);
+}
+
+.conduct-theme-root .text-slate-500 {
+  color: var(--conduct-text-muted);
+}
+
+.conduct-theme-root .text-slate-400,
+.conduct-theme-root .text-slate-300 {
+  color: var(--conduct-text-faint);
+}
+
+.conduct-theme-root .text-brand-800,
+.conduct-theme-root .text-brand-700 {
+  color: var(--conduct-phase);
+}
+
+.conduct-theme-root .hover\:text-brand-800:hover {
+  color: var(--conduct-accent-strong);
+}
+
+.conduct-theme-root .text-icon {
+  color: var(--conduct-icon);
+}
+
+.conduct-theme-root .text-icon-muted {
+  color: var(--conduct-icon-muted);
+}
+
+.conduct-theme-root .border-slate-100,
+.conduct-theme-root .border-slate-200 {
+  border-color: var(--conduct-border);
+}
+
+.conduct-theme-root .bg-slate-50 {
+  background-color: var(--conduct-bg);
+}
+
+.conduct-theme-root .bg-slate-50\/80 {
+  background-color: var(--conduct-meta-bg);
+}
+
+.conduct-theme-root .bg-white {
+  background-color: var(--conduct-surface);
+}
+
+.conduct-theme-root .hover\:bg-slate-50:hover,
+.conduct-theme-root .hover\:bg-slate-100:hover {
+  background-color: var(--conduct-accent-soft);
+}
+
+.conduct-theme-root .bg-brand-700\/\[0\.04\] {
+  background-color: var(--conduct-accent-soft);
+}
+
+.conduct-theme-root .border-brand-700 {
+  border-color: var(--conduct-accent);
+}
+
+.conduct-theme-root .bg-brand-700 {
+  background-color: var(--conduct-progress-active);
+}
+
+.conduct-theme-root .border-brand-700 {
+  border-color: var(--conduct-progress-active);
+}
+
+.conduct-theme-root .ring-brand-700\/15 {
+  --tw-ring-color: color-mix(in srgb, var(--conduct-progress-active) 15%, transparent);
+}
+
+.conduct-theme-root .border-slate-200.bg-white {
+  border-color: var(--conduct-progress-pending);
+  background-color: var(--conduct-surface);
+}
+
+.conduct-theme-root .bg-slate-100 {
+  background-color: var(--conduct-progress-track);
+}
+
+.conduct-theme-root .bg-slate-200 {
+  background-color: var(--conduct-progress-pending);
+}
+
+.conduct-theme-root .text-amber-700,
+.conduct-theme-root .conduct-stand-cue {
+  color: var(--conduct-stand-cue);
+}
+
+.conduct-theme-root .border-amber-400\/80,
+.conduct-theme-root .conduct-stand-cue-line {
+  border-color: var(--conduct-stand-cue-border);
+}
+
+/* PDF siempre en tema claro para imprimir */
+.conduct-theme-root .pdf-capture {
+  --conduct-bg: #f8fafc;
+  --conduct-surface: #ffffff;
+  --conduct-meta-bg: rgb(248 250 252 / 0.8);
+  --conduct-footer-bg: #f8fafc;
+  --conduct-text-strong: #0f172a;
+  --conduct-text: #1e293b;
+  --conduct-text-muted: #64748b;
+  --conduct-text-faint: #94a3b8;
+  --conduct-border: #e2e8f0;
+  --conduct-accent: #315a9a;
+  --conduct-accent-strong: #294a80;
+  --conduct-accent-soft: rgb(49 90 154 / 0.04);
+  --conduct-icon: #315a9a;
+  --conduct-phase: #294a80;
+  --conduct-progress-active: #315a9a;
+  --conduct-progress-track: #f1f5f9;
+  --conduct-progress-pending: #e2e8f0;
+  --conduct-stand-cue: #294a80;
+  --conduct-stand-cue-border: rgb(49 90 154 / 0.35);
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
