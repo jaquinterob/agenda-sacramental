@@ -63,3 +63,7 @@ export function getStepAlerts(form, meetingType = form.meetingType, attemptedSte
     return getStepValidationIssues(form, step.id).length > 0
   })
 }
+
+export function hasIncompleteRequiredFields(form, meetingType = form.meetingType) {
+  return getStepAlerts(form, meetingType).some(Boolean)
+}

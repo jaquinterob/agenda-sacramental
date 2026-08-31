@@ -20,7 +20,9 @@ import { scheduleItemIconType, TypeLabel } from './ItemTypeIcon'
 import ChurchLogo from './ChurchLogo'
 import ConductThemePicker, { useConductThemeState } from './ConductThemePicker'
 import ConductLinkMenu from './ConductLinkMenu'
+import PendingAlertIcon from './PendingAlertIcon'
 import { applyConductFontScale, clearConductFontScale } from '../utils/conductTheme'
+import { hasIncompleteRequiredFields } from '../utils/stepValidation'
 import { getPresidesMetaFields } from '../utils/presidesTitle'
 import { capitalizeName } from '../utils/capitalizeName'
 import {
@@ -479,6 +481,10 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
   const nextItemKey = itemKeys.find((key) => !doneItems.has(key)) ?? null
   const nextItemLabel = nextItemKey ? conductItemLabel(phases, nextItemKey) : null
   const meetingComplete = itemKeys.length > 0 && doneCount === itemKeys.length
+  const editHasAlert = useMemo(
+    () => !readOnly && hasIncompleteRequiredFields(liveAgenda),
+    [liveAgenda, readOnly],
+  )
 
   const getItemProgressForKey = useCallback(
     (itemKey) => getItemProgress(itemKey, itemKeys, doneItems, nextItemKey),
@@ -605,12 +611,17 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
             <button
               type="button"
               onClick={() => onBack(liveAgenda)}
-              className="text-sm text-white/80 hover:text-white flex items-center gap-1.5 shrink-0"
+              title={editHasAlert ? 'Hay campos obligatorios pendientes' : 'Volver a editar'}
+              aria-label={editHasAlert ? 'Editar, campos pendientes' : 'Editar'}
+              className="relative text-sm text-white/80 hover:text-white flex items-center gap-1.5 shrink-0"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Editar
+              {editHasAlert && (
+                <PendingAlertIcon className="absolute -top-1.5 -right-2.5 h-3.5 w-3.5 text-amber-300 drop-shadow-[0_0_0_1px_#213c67]" />
+              )}
             </button>
           )}
           <div className="flex items-center gap-3 shrink-0">

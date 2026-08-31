@@ -1,3 +1,5 @@
+import PendingAlertIcon from './PendingAlertIcon'
+
 export function StepProgress({ steps, currentIndex, onStepSelect, stepAlerts = [] }) {
   const total = steps.length
   const progress = total > 1 ? Math.round((currentIndex / (total - 1)) * 100) : 100
@@ -28,7 +30,10 @@ export function StepProgress({ steps, currentIndex, onStepSelect, stepAlerts = [
           />
         </div>
         <div className="flex items-center justify-between gap-3 text-[11px] font-semibold text-slate-500">
-          <span className="truncate">{current.shortTitle}</span>
+          <span className="flex min-w-0 items-center gap-1.5 truncate">
+            {currentHasAlert && <PendingAlertIcon className="h-3.5 w-3.5 shrink-0" />}
+            <span className="truncate">{current.shortTitle}</span>
+          </span>
           <span className="shrink-0 tabular-nums">
             {currentIndex + 1} / {total}
           </span>
@@ -97,30 +102,24 @@ export function StepProgress({ steps, currentIndex, onStepSelect, stepAlerts = [
                 <span
                   className={[
                     'relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300',
-                    hasAlert && isActive && 'border-amber-500 bg-white text-slate-900 shadow-sm',
-                    hasAlert && isDone && 'border-amber-500 bg-amber-50 text-amber-800',
-                    hasAlert && isPending && 'border-amber-300 bg-white text-amber-500',
-                    !hasAlert && isDone && 'border-brand-700 bg-brand-700 text-white',
-                    !hasAlert && isActive && 'border-brand-700 bg-white text-slate-900 shadow-sm',
-                    !hasAlert && isPending && 'border-slate-200 bg-white text-slate-300',
+                    isDone && 'border-brand-700 bg-brand-700 text-white',
+                    isActive && 'border-brand-700 bg-white text-slate-900 shadow-sm',
+                    isPending && 'border-slate-200 bg-white text-slate-300',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                 >
-                  {isDone && !hasAlert ? (
+                  {isDone ? (
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className={`text-xs font-bold tabular-nums ${isActive || hasAlert ? 'text-inherit' : ''}`}>
+                    <span className={`text-xs font-bold tabular-nums ${isActive ? 'text-slate-900' : ''}`}>
                       {i + 1}
                     </span>
                   )}
                   {hasAlert && (
-                    <span
-                      className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-400"
-                      aria-hidden="true"
-                    />
+                    <PendingAlertIcon className="absolute -top-1.5 -right-2 h-3.5 w-3.5 drop-shadow-[0_0_0_1px_white]" />
                   )}
                 </span>
 

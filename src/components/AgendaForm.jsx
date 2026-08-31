@@ -7,7 +7,7 @@ import { StepHeader, StepNav, StepProgress } from './StepWizard'
 import { estimateSacramentMinutes, MEETING_TOTAL_MINUTES } from '../utils/buildConductSchedule'
 import { getMeetingSteps } from '../utils/meetingSteps'
 import { defaultProgramItems } from '../utils/programItems'
-import { getStepAlerts } from '../utils/stepValidation'
+import { getStepAlerts, hasIncompleteRequiredFields } from '../utils/stepValidation'
 import { WardBusinessList } from './WardBusinessEditor'
 import { VisitorsEditor } from './VisitorsEditor'
 import { FormLabel, SectionLabel } from './ItemTypeIcon'
@@ -15,6 +15,7 @@ import ChurchLogo from './ChurchLogo'
 import NameInput from './NameInput'
 import SelectField from './SelectField'
 import SlidingToggle from './SlidingToggle'
+import PendingAlertIcon from './PendingAlertIcon'
 import { PRESIDES_TITLE_OPTIONS } from '../utils/presidesTitle'
 
 const inputClass =
@@ -66,6 +67,10 @@ export default function AgendaForm({
   const stepAlerts = useMemo(
     () => getStepAlerts(form, form.meetingType, attemptedSteps),
     [form, attemptedSteps],
+  )
+  const presentationHasAlert = useMemo(
+    () => hasIncompleteRequiredFields(form, form.meetingType),
+    [form],
   )
 
   const markStepAttempted = (stepId) => {
@@ -478,14 +483,29 @@ export default function AgendaForm({
           <button
             type="button"
             onClick={openPresentation}
-            className="group inline-flex max-w-full items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-2.5 py-2 text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all hover:border-brand-700/20 hover:shadow-[0_10px_28px_rgba(49,90,154,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/20 active:scale-[0.99] sm:gap-3 sm:px-3"
+            title={
+              presentationHasAlert
+                ? 'Hay campos obligatorios pendientes'
+                : 'Vista para dirigir'
+            }
+            aria-label={
+              presentationHasAlert
+                ? 'Presentación, campos pendientes'
+                : 'Presentación'
+            }
+            className="group relative inline-flex max-w-full items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-2.5 py-2 text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all hover:border-brand-700/20 hover:shadow-[0_10px_28px_rgba(49,90,154,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/20 active:scale-[0.99] sm:gap-3 sm:px-3"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-700/[0.08] text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-700/[0.08] text-brand-700 transition-colors group-hover:bg-brand-700 group-hover:text-white">
               <ProjectorScreen className="h-[18px] w-[18px]" weight="duotone" aria-hidden="true" />
+              {presentationHasAlert && (
+                <PendingAlertIcon className="absolute -top-1 -right-1 h-3.5 w-3.5 drop-shadow-[0_0_0_1px_white]" />
+              )}
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-semibold leading-tight text-slate-900">Presentación</span>
-              <span className="hidden text-[11px] leading-tight text-slate-500 sm:block">Vista para dirigir</span>
+              <span className="hidden text-[11px] leading-tight text-slate-500 sm:block">
+                {presentationHasAlert ? 'Campos pendientes' : 'Vista para dirigir'}
+              </span>
             </span>
             <CaretRight
               className="hidden h-3.5 w-3.5 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-brand-700 sm:block"
