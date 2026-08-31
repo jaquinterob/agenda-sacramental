@@ -12,26 +12,59 @@ function formatHymn(hymn) {
   return `${hymn.number} — ${hymn.title}`
 }
 
-function filterHymns(hymns, query) {
-  const q = query.trim().toLowerCase()
+function filterAndSortHymns(hymns, query) {
+  const q = query.trim()
   if (!q) return []
-  return hymns.filter(
-    (h) => String(h.number).includes(q) || h.title.toLowerCase().includes(q),
-  )
+
+  const qLower = q.toLowerCase()
+
+  const rank = (hymn) => {
+    const num = String(hymn.number)
+    const title = hymn.title.toLowerCase()
+
+    if (num === q) return 0
+    if (num.startsWith(q)) return 1
+    if (title.startsWith(qLower)) return 2
+    if (num.includes(q)) return 3
+    return 4
+  }
+
+  return hymns
+    .filter((h) => String(h.number).includes(q) || h.title.toLowerCase().includes(qLower))
+    .sort((a, b) => {
+      const rankDiff = rank(a) - rank(b)
+      if (rankDiff !== 0) return rankDiff
+      return a.number - b.number
+    })
 }
 
 function measureDropdown(input) {
   const rect = input.getBoundingClientRect()
+  const gap = 4
   const spaceBelow = window.innerHeight - rect.bottom - STEP_NAV_RESERVE
   const spaceAbove = rect.top - 12
-  const openUp = spaceBelow < 160 && spaceAbove > spaceBelow
-  const maxHeight = Math.max(120, Math.min(280, openUp ? spaceAbove - 8 : spaceBelow - 8))
+  const minHeight = 88
+  const preferredMax = 240
+
+  // Preferir abrir hacia abajo; solo invertir si casi no cabe.
+  const openUp = spaceBelow < minHeight && spaceAbove > spaceBelow + 40
+
+  if (!openUp) {
+    return {
+      placement: 'below',
+      top: rect.bottom + gap,
+      left: rect.left,
+      width: rect.width,
+      maxHeight: Math.max(minHeight, Math.min(preferredMax, spaceBelow - gap)),
+    }
+  }
 
   return {
-    top: openUp ? rect.top - maxHeight - 4 : rect.bottom + 4,
+    placement: 'above',
+    bottom: window.innerHeight - rect.top + gap,
     left: rect.left,
     width: rect.width,
-    maxHeight,
+    maxHeight: Math.max(minHeight, Math.min(preferredMax, spaceAbove - gap)),
   }
 }
 
@@ -62,7 +95,7 @@ export default function HymnSelector({
     [hymns, sacramentOnly],
   )
 
-  const results = useMemo(() => filterHymns(pool, query), [pool, query])
+  const results = useMemo(() => filterAndSortHymns(pool, query), [pool, query])
   const visibleResults = results.slice(0, MAX_RESULTS)
   const inputValue = open ? query : selected ? formatHymn(selected) : ''
   const showList = open && query.trim().length > 0
@@ -186,11 +219,13 @@ export default function HymnSelector({
         role="listbox"
         style={{
           position: 'fixed',
-          top: dropdownLayout.top,
           left: dropdownLayout.left,
           width: dropdownLayout.width,
           maxHeight: dropdownLayout.maxHeight,
           zIndex: 100,
+          ...(dropdownLayout.placement === 'below'
+            ? { top: dropdownLayout.top }
+            : { bottom: dropdownLayout.bottom }),
         }}
         className="overflow-y-auto overscroll-contain touch-pan-y rounded-lg border border-gray-200 bg-white py-1 shadow-[0_16px_40px_rgba(15,23,42,0.16)]"
       >
