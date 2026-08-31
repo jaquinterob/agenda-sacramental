@@ -681,9 +681,9 @@ export default function AgendaConduct({ agenda, hymns, onBack, readOnly = false 
           className={`conduct-surface bg-white ${capturing ? 'pdf-capture overflow-visible rounded-none shadow-none' : 'rounded-2xl overflow-hidden'}`}
         >
           <div data-pdf-block className="px-5 py-5 md:px-8">
-            <div className="grid grid-cols-1 grid-rows-1 items-center min-h-20">
-              <ChurchLogo size="lg" className="col-start-1 row-start-1 justify-self-start self-start shrink-0" />
-              <h1 className="col-start-1 row-start-1 justify-self-center max-w-full px-16 md:px-24 text-sm md:text-base font-bold uppercase tracking-wide text-slate-900 leading-snug text-center">
+            <div className="relative flex items-center py-1">
+              <ChurchLogo size="lg" className="shrink-0" />
+              <h1 className="pointer-events-none absolute inset-x-0 max-w-full px-14 md:px-20 text-sm md:text-base font-bold uppercase tracking-wide text-slate-900 leading-snug text-center">
                 {title}
               </h1>
             </div>

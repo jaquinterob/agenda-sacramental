@@ -1,8 +1,8 @@
 const SIZES = {
-  sm: 'h-11',
-  md: 'h-14',
-  lg: 'h-20',
-  xl: 'h-24',
+  sm: 'h-9',
+  md: 'h-12',
+  lg: 'h-16',
+  xl: 'h-20',
 }
 
 const logoSrc = `${import.meta.env.BASE_URL}church-logo.png`
