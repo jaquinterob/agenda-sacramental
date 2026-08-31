@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { CaretRight, ProjectorScreen } from '@phosphor-icons/react'
 import HymnSelector from './HymnSelector'
 import FormOptionsMenu from './FormOptionsMenu'
@@ -138,8 +138,17 @@ export default function AgendaForm({
   }
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0))
 
+  const stepPanelRef = useRef(null)
+
   useEffect(() => {
-    window.scrollTo(0, 0)
+    const panel = stepPanelRef.current
+    if (!panel) return
+
+    // Evitar scrollTo(0,0): en Chrome móvil muestra/oculta la barra y “redimensiona” la vista.
+    const top = panel.getBoundingClientRect().top
+    if (top < 8 || top > 120) {
+      panel.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+    }
   }, [stepIndex])
 
   const renderStepContent = () => {
@@ -539,7 +548,11 @@ export default function AgendaForm({
         stepAlerts={stepAlerts}
       />
 
-      <div key={currentStep.id} className="step-fade">
+      <div
+        ref={stepPanelRef}
+        key={currentStep.id}
+        className="step-fade min-h-[min(52vh,26rem)]"
+      >
         <StepHeader step={currentStep} />
         <div>{renderStepContent()}</div>
       </div>

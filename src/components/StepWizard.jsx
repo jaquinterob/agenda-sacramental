@@ -38,8 +38,10 @@ export function StepProgress({ steps, currentIndex, onStepSelect, stepAlerts = [
             {currentIndex + 1} / {total}
           </span>
         </div>
-        {currentHasAlert && (
-          <p className="text-[11px] font-medium text-amber-700">Campos pendientes</p>
+        {currentHasAlert ? (
+          <p className="text-[11px] font-medium text-amber-700 min-h-[1.25rem]">Campos pendientes</p>
+        ) : (
+          <p className="min-h-[1.25rem]" aria-hidden="true" />
         )}
       </div>
 
@@ -189,18 +191,21 @@ const navBtnBase =
 export function StepNav({ isFirst, isLast, onPrev, onNext }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 pointer-events-none">
-      <div className="max-w-2xl mx-auto px-4 pb-8 pt-12 bg-gradient-to-t from-gray-50 from-40% to-transparent pointer-events-auto">
-        <div className={`flex items-center gap-4 ${isFirst ? 'justify-end' : 'justify-between'}`}>
-          {!isFirst && (
-            <button
-              type="button"
-              onClick={onPrev}
-              className={`${navBtnBase} px-1 py-2 text-slate-500 hover:text-slate-900`}
-            >
-              <ChevronLeftIcon className="w-4 h-4 opacity-70" />
-              Atrás
-            </button>
-          )}
+      <div className="max-w-2xl mx-auto px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-12 bg-gradient-to-t from-gray-50 from-40% to-transparent pointer-events-auto">
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={isFirst}
+            tabIndex={isFirst ? -1 : 0}
+            aria-hidden={isFirst || undefined}
+            className={`${navBtnBase} px-1 py-2 text-slate-500 hover:text-slate-900 ${
+              isFirst ? 'invisible pointer-events-none' : ''
+            }`}
+          >
+            <ChevronLeftIcon className="w-4 h-4 opacity-70" />
+            Atrás
+          </button>
 
           {isLast ? (
             <button
