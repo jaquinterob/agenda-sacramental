@@ -12,7 +12,7 @@ import {
 import { anchorPanelStyle, measureAnchorPanel } from '../utils/measureAnchorPanel'
 
 const PANEL_WIDTH = 256
-const PANEL_HEIGHT = 200
+const PANEL_HEIGHT = 240
 
 export default function ConductThemePicker({ theme, fontScale, onThemeChange, onFontScaleChange }) {
   const [open, setOpen] = useState(false)

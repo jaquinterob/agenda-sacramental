@@ -1,6 +1,7 @@
 export const CONDUCT_THEMES = [
   { id: 'light', label: 'Claro' },
   { id: 'sepia', label: 'Sepia' },
+  { id: 'midnight', label: 'Medianoche' },
 ]
 
 export const CONDUCT_FONT_SCALES = [
@@ -16,7 +17,6 @@ const STORAGE_FONT = 'agenda-conduct-font'
 
 export function loadConductTheme() {
   const saved = localStorage.getItem(STORAGE_THEME)
-  if (saved === 'midnight') return 'light'
   return CONDUCT_THEMES.some((t) => t.id === saved) ? saved : 'light'
 }
 

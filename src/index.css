@@ -77,6 +77,31 @@ body {
   --conduct-footer-bg: #f3efe6;
 }
 
+/* Oscuro suave: azul pizarra, sin negro puro */
+.conduct-theme-root[data-conduct-theme='midnight'] {
+  --conduct-bg: #2a3344;
+  --conduct-surface: #343e52;
+  --conduct-meta-bg: rgb(42 51 68 / 0.92);
+  --conduct-footer-bg: #2f384a;
+  --conduct-text-strong: #f1f5f9;
+  --conduct-text: #dce3ee;
+  --conduct-text-muted: #a8b4c8;
+  --conduct-text-faint: #8795ad;
+  --conduct-border: #455166;
+  --conduct-border-subtle: #3a4558;
+  --conduct-accent: #7ea0d4;
+  --conduct-accent-strong: #9bb6df;
+  --conduct-accent-soft: rgb(126 160 212 / 0.12);
+  --conduct-icon: #8eacd8;
+  --conduct-icon-muted: #6f87ab;
+  --conduct-progress-active: #7ea0d4;
+  --conduct-progress-track: #3a4558;
+  --conduct-progress-pending: #455166;
+  --conduct-phase: #9bb6df;
+  --conduct-stand-cue: #c4d4ec;
+  --conduct-stand-cue-border: rgb(158 184 220 / 0.45);
+}
+
 .conduct-theme-root .conduct-surface {
   background-color: var(--conduct-surface);
 }
