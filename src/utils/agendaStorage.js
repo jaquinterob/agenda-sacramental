@@ -18,13 +18,16 @@ export function loadAgendaDraft() {
     return {
       agenda: normalizeAgenda(parsed.agenda),
       stepIndex: Number.isInteger(parsed.stepIndex) ? parsed.stepIndex : 0,
+      attemptedSteps: Array.isArray(parsed.attemptedSteps)
+        ? parsed.attemptedSteps.filter((id) => typeof id === 'string')
+        : [],
     }
   } catch {
     return null
   }
 }
 
-export function saveAgendaDraft(agenda, stepIndex) {
+export function saveAgendaDraft(agenda, stepIndex, attemptedSteps = []) {
   try {
     localStorage.setItem(
       STORAGE_KEY,
@@ -32,6 +35,7 @@ export function saveAgendaDraft(agenda, stepIndex) {
         v: STORAGE_VERSION,
         agenda,
         stepIndex,
+        attemptedSteps: Array.from(attemptedSteps),
         savedAt: new Date().toISOString(),
       }),
     )

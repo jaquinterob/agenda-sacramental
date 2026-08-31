@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { CaretRight, ProjectorScreen } from '@phosphor-icons/react'
 import HymnSelector from './HymnSelector'
 import FormOptionsMenu from './FormOptionsMenu'
@@ -7,7 +7,7 @@ import { StepHeader, StepNav, StepProgress } from './StepWizard'
 import { estimateSacramentMinutes, MEETING_TOTAL_MINUTES } from '../utils/buildConductSchedule'
 import { getMeetingSteps } from '../utils/meetingSteps'
 import { defaultProgramItems } from '../utils/programItems'
-import { getStepAlerts, hasIncompleteRequiredFields } from '../utils/stepValidation'
+import { getStepAlerts, getStepValidationIssues, hasIncompleteRequiredFields } from '../utils/stepValidation'
 import { WardBusinessList } from './WardBusinessEditor'
 import { VisitorsEditor } from './VisitorsEditor'
 import { FormLabel, SectionLabel } from './ItemTypeIcon'
@@ -57,13 +57,14 @@ export default function AgendaForm({
   setForm,
   stepIndex,
   setStepIndex,
+  attemptedSteps,
+  setAttemptedSteps,
   onOpenPresentation,
   onClearDraft,
 }) {
   const isSacrament = form.meetingType === 'sacrament'
   const steps = getMeetingSteps(form.meetingType)
   const currentStep = steps[stepIndex]
-  const [attemptedSteps, setAttemptedSteps] = useState(() => new Set())
   const stepAlerts = useMemo(
     () => getStepAlerts(form, form.meetingType, attemptedSteps),
     [form, attemptedSteps],
@@ -111,11 +112,25 @@ export default function AgendaForm({
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    markStepAttempted(currentStep.id)
+    markIncompleteStepsAttempted()
     onOpenPresentation()
   }
 
-  const openPresentation = () => onOpenPresentation()
+  const markIncompleteStepsAttempted = () => {
+    setAttemptedSteps((prev) => {
+      const next = new Set(prev)
+      next.add(currentStep.id)
+      for (const step of steps) {
+        if (getStepValidationIssues(form, step.id).length > 0) next.add(step.id)
+      }
+      return next
+    })
+  }
+
+  const openPresentation = () => {
+    markIncompleteStepsAttempted()
+    onOpenPresentation()
+  }
 
   const goNext = () => {
     markStepAttempted(currentStep.id)

@@ -11,6 +11,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [agenda, setAgenda] = useState(createInitialAgenda)
   const [stepIndex, setStepIndex] = useState(0)
+  const [attemptedSteps, setAttemptedSteps] = useState(() => new Set())
   const [view, setView] = useState('form')
   const [conductReadOnly, setConductReadOnly] = useState(false)
   const hydratedRef = useRef(false)
@@ -46,6 +47,7 @@ export default function App() {
       if (draft) {
         setAgenda(draft.agenda)
         setStepIndex(draft.stepIndex)
+        setAttemptedSteps(new Set(draft.attemptedSteps))
       }
     }
 
@@ -54,8 +56,8 @@ export default function App() {
 
   useEffect(() => {
     if (loading || !hydratedRef.current) return
-    saveAgendaDraft(agenda, stepIndex)
-  }, [agenda, stepIndex, loading])
+    saveAgendaDraft(agenda, stepIndex, attemptedSteps)
+  }, [agenda, stepIndex, attemptedSteps, loading])
 
   const clearDraft = () => {
     if (
@@ -69,6 +71,7 @@ export default function App() {
     clearAgendaDraft()
     setAgenda(createInitialAgenda())
     setStepIndex(0)
+    setAttemptedSteps(new Set())
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
   }
 
@@ -104,6 +107,8 @@ export default function App() {
         setForm={setAgenda}
         stepIndex={stepIndex}
         setStepIndex={setStepIndex}
+        attemptedSteps={attemptedSteps}
+        setAttemptedSteps={setAttemptedSteps}
         onClearDraft={clearDraft}
         onOpenPresentation={() => {
           setConductReadOnly(false)
