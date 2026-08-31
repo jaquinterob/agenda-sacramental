@@ -35,8 +35,11 @@ import WardScriptText from './WardScriptText'
 import { WelcomeVisitorsList } from './VisitorsEditor'
 
 function ConductProgressRing({ done, total, complete, nextLabel }) {
-  const size = 28
-  const stroke = 3
+  const label = `${done}/${total}`
+  const digitCount = String(done).length + String(total).length
+  // Con dos dígitos a cada lado (p. ej. 12/12) el texto necesita más espacio interior.
+  const size = digitCount >= 4 ? 36 : digitCount >= 3 ? 32 : 28
+  const stroke = 2.75
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const progress = total > 0 ? done / total : 0
@@ -46,10 +49,17 @@ function ConductProgressRing({ done, total, complete, nextLabel }) {
     : nextLabel
       ? `Siguiente: ${nextLabel} · ${done} de ${total}`
       : `${done} de ${total}`
+  const labelClass =
+    digitCount >= 4
+      ? 'text-[8px] tracking-tighter'
+      : digitCount >= 3
+        ? 'text-[8.5px] tracking-tight'
+        : 'text-[9px]'
 
   return (
     <span
       className="relative inline-flex items-center justify-center shrink-0"
+      style={{ width: size, height: size }}
       title={title}
       aria-label={title}
       role="status"
@@ -77,8 +87,10 @@ function ConductProgressRing({ done, total, complete, nextLabel }) {
           className="text-white/90 transition-[stroke-dashoffset] duration-300"
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold tabular-nums leading-none text-white/90">
-        {done}/{total}
+      <span
+        className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums leading-none text-white/90 ${labelClass}`}
+      >
+        {label}
       </span>
     </span>
   )
